@@ -60,7 +60,7 @@ if (!gotSingleInstanceLock) {
       autoHideMenuBar: true,
       backgroundColor: '#f1f5f9',
       icon: appIcon,
-      title: '프로세스 모니터 - 다중 프로그램 자동 복구 및 시간 동기화',
+      title: 'Process Monitor - 다중 프로그램 자동 복구 및 시간 동기화',
       webPreferences: {
         preload: path.join(__dirname, '../preload/index.js'),
         contextIsolation: true,

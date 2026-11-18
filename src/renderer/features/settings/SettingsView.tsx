@@ -141,9 +141,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [testingNtp, setTestingNtp] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // 2초 주기 상태 브로드캐스트로 인해 편집 중인 설정 버튼이 원래 값으로 튕기는 현상 방지
+  const configSignature = JSON.stringify({
+    system: config?.system,
+    ntp: config?.ntp
+  })
+
   useEffect(() => {
     setDraft(buildSafeDraft(config))
-  }, [config])
+  }, [configSignature])
 
   const updateServer = (idx: 0 | 1 | 2, address: string): void => {
     const nextServers: [string, string, string] = [...draft.ntp.servers] as [string, string, string]

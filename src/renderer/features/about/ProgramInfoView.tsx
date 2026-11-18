@@ -51,7 +51,7 @@ export const ProgramInfoView: React.FC<ProgramInfoViewProps> = ({
               <span className="col-span-4 text-[#64748b] font-medium">프로그램명</span>
               <span className="col-span-1 text-center text-[#94a3b8]">:</span>
               <span className="col-span-7 text-right font-extrabold text-[#0f172a] text-[14px]">
-                프로세스 모니터
+                Process Monitor
               </span>
             </div>
             <div className="grid grid-cols-12 items-center px-3.5 py-2">

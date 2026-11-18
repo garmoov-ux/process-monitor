@@ -90,11 +90,11 @@ export const GlobalNav: React.FC<GlobalNavProps> = ({
         <button
           type="button"
           onClick={() => onSelectTab('about')}
-          title="프로세스 모니터 프로그램 정보"
-          className="relative w-[46px] h-[32px] rounded-[8px] bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] flex items-center justify-center transition-all duration-150 active:scale-95 cursor-pointer"
+          title="Process Monitor 프로그램 정보"
+          className="relative w-[48px] h-[34px] rounded-[8px] bg-[#1e293b] hover:bg-[#334155] border border-[#334155] flex items-center justify-center transition-all duration-150 active:scale-95 cursor-pointer"
         >
-          <span className="text-[11.5px] font-extrabold tracking-tight text-white leading-none">
-            감<span className="text-[#38bdf8]">시</span>
+          <span className="text-[11px] font-extrabold tracking-tight text-white leading-none">
+            Prc<span className="text-[#38bdf8]">Mon</span>
           </span>
           <span
             className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-[#090d16] ${
