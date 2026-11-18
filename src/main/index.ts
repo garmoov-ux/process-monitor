@@ -39,6 +39,8 @@ let mainWindow: BrowserWindow | null = null
 let isQuitting = false
 
 const RelaunchingAsAdmin = ensureWindowsAdminOnPackaged()
+app.setName('Process Monitor - 다중 프로그램 자동 복구 및 시간 동기화')
+app.setAppUserModelId('com.inno.processmonitor')
 const gotSingleInstanceLock = RelaunchingAsAdmin ? false : app.requestSingleInstanceLock()
 
 if (!gotSingleInstanceLock) {
