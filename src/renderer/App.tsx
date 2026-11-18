@@ -26,6 +26,7 @@ export const App: React.FC = () => {
     updateConfig,
     syncNtpNow,
     runCleanupNow,
+    cancelScheduledReboot,
     scanRunning
   } = useProcessMonitorState()
 
@@ -77,6 +78,25 @@ export const App: React.FC = () => {
 
       {/* 우측 화이트/슬레이트 콘텐츠 영역 */}
       <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+        {snapshot.rebootCountdown?.active && (
+          <div className="bg-[#dc2626] text-white px-4 py-2 flex items-center justify-between gap-3 shrink-0 border-b border-[#b91c1c]">
+            <div className="flex items-center gap-2 text-[12.5px] font-semibold">
+              <span className="inline-block w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>
+                정기 시스템 재시작 알림 ({snapshot.rebootCountdown.reason}) —{' '}
+                <strong className="underline">{snapshot.rebootCountdown.remainingSec}초</strong> 후 윈도우가 자동 재부팅됩니다.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void cancelScheduledReboot()}
+              className="h-[26px] px-3 rounded-[6px] bg-white text-[#dc2626] hover:bg-[#fef2f2] text-[12px] font-bold transition-all cursor-pointer shrink-0"
+            >
+              이번 재시작 취소
+            </button>
+          </div>
+        )}
+
         {toastMessage && (
           <div className="fixed bottom-10 right-6 z-50 bg-[#0f172a] text-white px-4 py-2 rounded-[8px] text-[12px] font-medium border border-[#334155] apple-product-shadow">
             {toastMessage}

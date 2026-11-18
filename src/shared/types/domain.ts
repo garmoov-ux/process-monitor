@@ -49,9 +49,32 @@ export interface NtpConfig {
   ports: [number, number, number]
 }
 
+export type RebootScheduleRuleMode = 'DAYS_OF_WEEK' | 'DAYS_OF_MONTH'
+
+export interface RebootScheduleConfig {
+  enabled: boolean
+  ruleMode: RebootScheduleRuleMode
+  months: number[]
+  daysOfWeek: number[]
+  daysOfMonth: number[]
+  hour: number
+  minute: number
+  catchUpOnMissed: boolean
+  graceCancelSec: number
+  lastExecutedDate: string | null
+}
+
+export interface RebootCountdownState {
+  active: boolean
+  remainingSec: number
+  scheduledLabel: string
+  reason: string
+}
+
 export interface AppConfig {
   system: SystemConfig
   ntp: NtpConfig
+  reboot: RebootScheduleConfig
   targets: ProcessTargetConfig[]
 }
 
@@ -160,6 +183,7 @@ export interface MonitorStateSnapshot {
   recentNtpHistory: NtpSyncRecord[]
   dailyStats: DailyProcessStat[]
   storageInfo: StorageFolderItem[]
+  rebootCountdown: RebootCountdownState
 }
 
 export interface HistoryQueryFilter {

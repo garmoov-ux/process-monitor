@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { ProcessStateMachine } from '../src/main/watchdog/state-machine'
-import { ProcessTargetConfig, RunningProcessSnapshot } from '../src/shared/types/domain'
+import { evaluateRebootSchedule } from '../src/main/watchdog/reboot-scheduler'
+import {
+  ProcessTargetConfig,
+  RebootScheduleConfig,
+  RunningProcessSnapshot
+} from '../src/shared/types/domain'
 
 function createSampleTarget(overrides: Partial<ProcessTargetConfig> = {}): ProcessTargetConfig {
   return {
@@ -161,3 +166,55 @@ describe('ProcessStateMachine (단조 증가 시간 기반 상태 전이 검증)
     expect(forceAct.pid).toBe(7777)
   })
 })
+
+describe('evaluateRebootSchedule (정기 시스템 재시작 월·일 선택 및 미실행 보완/중복 방지 검증)', () => {
+  const baseRebootConfig: RebootScheduleConfig = {
+    enabled: true,
+    ruleMode: 'DAYS_OF_WEEK',
+    months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+    daysOfMonth: [1, 15],
+    hour: 4,
+    minute: 0,
+    catchUpOnMissed: true,
+    graceCancelSec: 30,
+    lastExecutedDate: null
+  }
+
+  it('지정 시각이 지났으나 시스템이 지정 시각 이전부터 계속 켜져 있었고 미실행 상태면 보완 실행(shouldTrigger=true)을 반환한다', () => {
+    const now = new Date(2026, 10, 18, 4, 25, 0) // 11월 18일 04:25
+    const bootBeforeSchedule = new Date(2026, 10, 17, 22, 0, 0).getTime() // 전날 22:00 부팅
+
+    const res = evaluateRebootSchedule(baseRebootConfig, now, bootBeforeSchedule, false)
+    expect(res.shouldTrigger).toBe(true)
+    expect(res.markExecutedToday).toBe(false)
+    expect(res.todayDateStr).toBe('2026-11-18')
+  })
+
+  it('금일 지정 시각 이후에 이미 부팅된 경우 무한 재부팅 방지를 위해 재시작하지 않고 실행 완료 마킹만 요청한다', () => {
+    const now = new Date(2026, 10, 18, 4, 5, 0) // 11월 18일 04:05
+    const bootAfterSchedule = new Date(2026, 10, 18, 4, 1, 0).getTime() // 04:01 부팅 완료
+
+    const res = evaluateRebootSchedule(baseRebootConfig, now, bootAfterSchedule, false)
+    expect(res.shouldTrigger).toBe(false)
+    expect(res.markExecutedToday).toBe(true)
+  })
+
+  it('선택 해제된 월이나 일자에서는 지정 시각이 되어도 재시작하지 않는다', () => {
+    const now = new Date(2026, 10, 18, 4, 0, 10) // 11월 18일 04:00:10
+    const bootBeforeSchedule = new Date(2026, 10, 17, 20, 0, 0).getTime()
+
+    // 11월이 해제된 경우
+    const noNov = { ...baseRebootConfig, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12] }
+    expect(evaluateRebootSchedule(noNov, now, bootBeforeSchedule, false).shouldTrigger).toBe(false)
+
+    // 일자별 모드에서 18일이 해제된 경우
+    const byDateNo18: RebootScheduleConfig = {
+      ...baseRebootConfig,
+      ruleMode: 'DAYS_OF_MONTH',
+      daysOfMonth: [1, 15, 30]
+    }
+    expect(evaluateRebootSchedule(byDateNo18, now, bootBeforeSchedule, false).shouldTrigger).toBe(false)
+  })
+})
+

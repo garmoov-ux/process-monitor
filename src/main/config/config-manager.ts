@@ -1,7 +1,22 @@
 import fs from 'fs'
 import path from 'path'
-import { AppConfig, ProcessTargetConfig } from '@shared/types/domain'
+import { AppConfig, ProcessTargetConfig, RebootScheduleConfig } from '@shared/types/domain'
 import { resolveAppPaths } from './app-paths'
+
+export function createDefaultRebootConfig(): RebootScheduleConfig {
+  return {
+    enabled: false,
+    ruleMode: 'DAYS_OF_WEEK',
+    months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+    daysOfMonth: [1, 15],
+    hour: 4,
+    minute: 0,
+    catchUpOnMissed: true,
+    graceCancelSec: 30,
+    lastExecutedDate: null
+  }
+}
 
 export function createDefaultConfig(): AppConfig {
   const defaultInterval = Number(process.env.PROCESS_MONITOR_CHECK_INTERVAL_MS || 2000)
@@ -33,6 +48,7 @@ export function createDefaultConfig(): AppConfig {
       ],
       ports: [123, 123, 123]
     },
+    reboot: createDefaultRebootConfig(),
     targets: []
   }
 }
@@ -65,6 +81,38 @@ function normalizePort(val: unknown, fallback = 123): number {
   const n = Number(val)
   if (Number.isInteger(n) && n >= 1 && n <= 65535) return n
   return fallback
+}
+
+function normalizeIntArray(raw: unknown, min: number, max: number, fallback: number[]): number[] {
+  if (!Array.isArray(raw)) return fallback
+  const filtered = Array.from(
+    new Set(
+      raw
+        .map((v) => Number(v))
+        .filter((n) => Number.isInteger(n) && n >= min && n <= max)
+    )
+  ).sort((a, b) => a - b)
+  return filtered
+}
+
+export function normalizeRebootConfig(raw?: Partial<RebootScheduleConfig> | null): RebootScheduleConfig {
+  const def = createDefaultRebootConfig()
+  if (!raw || typeof raw !== 'object') return def
+
+  return {
+    enabled: Boolean(raw.enabled ?? def.enabled),
+    ruleMode: raw.ruleMode === 'DAYS_OF_MONTH' ? 'DAYS_OF_MONTH' : 'DAYS_OF_WEEK',
+    months: normalizeIntArray(raw.months, 1, 12, def.months),
+    daysOfWeek: normalizeIntArray(raw.daysOfWeek, 0, 6, def.daysOfWeek),
+    daysOfMonth: normalizeIntArray(raw.daysOfMonth, 1, 31, def.daysOfMonth),
+    hour: Math.min(23, Math.max(0, Math.floor(Number(raw.hour ?? def.hour) || 0))),
+    minute: Math.min(59, Math.max(0, Math.floor(Number(raw.minute ?? def.minute) || 0))),
+    catchUpOnMissed: raw.catchUpOnMissed !== undefined ? Boolean(raw.catchUpOnMissed) : def.catchUpOnMissed,
+    graceCancelSec: Math.min(300, Math.max(5, Math.floor(Number(raw.graceCancelSec ?? def.graceCancelSec) || 30))),
+    lastExecutedDate: typeof raw.lastExecutedDate === 'string' && raw.lastExecutedDate.trim()
+      ? raw.lastExecutedDate.trim()
+      : null
+  }
 }
 
 export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): AppConfig {
@@ -116,6 +164,7 @@ export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): 
       servers,
       ports
     },
+    reboot: normalizeRebootConfig(raw.reboot),
     targets
   }
 }
@@ -139,7 +188,6 @@ export function saveConfigAtomically(config: AppConfig, customPath?: string): Ap
     }
     fs.renameSync(tempPath, targetPath)
   } catch {
-    // Windows 파일 감시자(Vite/Defender) 잠금으로 인한 EPERM 발생 시 안전한 직접 쓰기 폴백
     try {
       fs.writeFileSync(targetPath, payload, 'utf-8')
     } catch {

@@ -138,6 +138,10 @@ export function registerIpcHandlers(params: {
     return watchdog.runCleanupNow()
   })
 
+  ipcMain.handle(IPC_CHANNELS.CANCEL_SCHEDULED_REBOOT, () => {
+    return watchdog.cancelScheduledReboot()
+  })
+
   ipcMain.handle(IPC_CHANNELS.QUERY_EVENT_HISTORY, (_e, filter: HistoryQueryFilter) => {
     return processRepo.queryEvents(filter)
   })

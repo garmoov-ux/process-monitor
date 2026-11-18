@@ -24,5 +24,17 @@
       123
     ]
   },
+  "reboot": {
+    "enabled": false,
+    "ruleMode": "DAYS_OF_WEEK",
+    "months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "daysOfWeek": [0, 1, 2, 3, 4, 5, 6],
+    "daysOfMonth": [1, 15],
+    "hour": 4,
+    "minute": 0,
+    "catchUpOnMissed": true,
+    "graceCancelSec": 30,
+    "lastExecutedDate": null
+  },
   "targets": []
 }

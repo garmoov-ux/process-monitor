@@ -169,6 +169,18 @@ export function useProcessMonitorState() {
     }
   }, [showToast])
 
+  const cancelScheduledReboot = useCallback(async () => {
+    try {
+      if (typeof window.processMonitorApi.cancelScheduledReboot === 'function') {
+        const next = await window.processMonitorApi.cancelScheduledReboot()
+        if (next) setSnapshot(next)
+      }
+      showToast('이번 정기 시스템 재시작이 취소되었습니다.')
+    } catch (err) {
+      showToast(`재시작 취소 중 오류: ${(err as Error).message}`)
+    }
+  }, [showToast])
+
   const scanRunning = useCallback(async (): Promise<RunningProcessSnapshot[]> => {
     try {
       return await window.processMonitorApi.scanRunningProcesses()
@@ -199,6 +211,7 @@ export function useProcessMonitorState() {
     updateConfig,
     syncNtpNow,
     runCleanupNow,
+    cancelScheduledReboot,
     scanRunning,
     queryEvents
   }

@@ -66,6 +66,9 @@ export const processMonitorApi = {
   runCleanupNow: (): Promise<MonitorStateSnapshot> =>
     ipcRenderer.invoke(IPC_CHANNELS.RUN_CLEANUP_NOW),
 
+  cancelScheduledReboot: (): Promise<MonitorStateSnapshot> =>
+    ipcRenderer.invoke(IPC_CHANNELS.CANCEL_SCHEDULED_REBOOT),
+
   queryEventHistory: (filter: HistoryQueryFilter): Promise<ProcessEventRecord[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.QUERY_EVENT_HISTORY, filter),
 

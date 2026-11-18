@@ -22,6 +22,7 @@ import {
   executeTransitionAction,
   recordTargetEvent
 } from './watchdog-actions'
+import { RebootScheduler } from './reboot-scheduler'
 
 export class WatchdogScheduler {
   private machines = new Map<string, ProcessStateMachine>()
@@ -31,6 +32,7 @@ export class WatchdogScheduler {
   private lastScanAt: string | null = null
   private bootRegistered = false
   private sampleTickCounter = 0
+  private rebootScheduler: RebootScheduler
 
   constructor(
     private config: AppConfig,
@@ -39,6 +41,16 @@ export class WatchdogScheduler {
     private readonly ntpScheduler: NtpScheduler,
     private readonly getMainWindow: () => BrowserWindow | null
   ) {
+    this.rebootScheduler = new RebootScheduler(
+      this.processRepo,
+      (todayDateStr) => {
+        this.config = saveConfigAtomically({
+          ...this.config,
+          reboot: { ...this.config.reboot, lastExecutedDate: todayDateStr }
+        })
+      },
+      () => this.broadcastStateIfVisible()
+    )
     this.syncMachinesFromConfig()
   }
 
@@ -92,6 +104,7 @@ export class WatchdogScheduler {
       clearInterval(this.cleanupTimer)
       this.cleanupTimer = null
     }
+    this.rebootScheduler.stop()
   }
 
   getConfig(): AppConfig {
@@ -101,6 +114,11 @@ export class WatchdogScheduler {
   runCleanupNow(): MonitorStateSnapshot {
     runRetentionCleanup(this.config.system.logRetentionDays, this.processRepo, this.ntpRepo)
     this.broadcastStateIfVisible()
+    return this.getSnapshot()
+  }
+
+  cancelScheduledReboot(): MonitorStateSnapshot {
+    this.rebootScheduler.cancelCountdown()
     return this.getSnapshot()
   }
 
@@ -181,6 +199,8 @@ export class WatchdogScheduler {
       if (sampleRows.length > 0) {
         this.processRepo.recordSampleBatch(statDate, sampleRows)
       }
+
+      this.rebootScheduler.checkTick(this.config.reboot, this.config.system.maintenanceMode)
 
       this.broadcastStateIfVisible()
     } finally {
@@ -298,10 +318,25 @@ export class WatchdogScheduler {
   async updateConfig(nextConfig: AppConfig): Promise<MonitorStateSnapshot> {
     const prevRunOnBoot = this.config.system.runOnBoot
     const prevInterval = this.config.system.checkIntervalMs
+    const prevRebootTimeChanged =
+      this.config.reboot?.hour !== nextConfig.reboot?.hour ||
+      this.config.reboot?.minute !== nextConfig.reboot?.minute
 
-    this.config = saveConfigAtomically(nextConfig)
+    const configToSave: AppConfig =
+      prevRebootTimeChanged && nextConfig.reboot
+        ? {
+            ...nextConfig,
+            reboot: { ...nextConfig.reboot, lastExecutedDate: null }
+          }
+        : nextConfig
+
+    this.config = saveConfigAtomically(configToSave)
     this.syncMachinesFromConfig()
     this.ntpScheduler.updateConfig(this.config.ntp)
+
+    if (!this.config.reboot.enabled) {
+      this.rebootScheduler.stop()
+    }
 
     if (prevRunOnBoot !== this.config.system.runOnBoot) {
       await syncBootSchedulerTask(this.config.system.runOnBoot)
@@ -359,7 +394,8 @@ export class WatchdogScheduler {
       recentEvents: this.processRepo.queryEvents({ limit: 100 }),
       recentNtpHistory: this.ntpRepo.getRecentHistory(30),
       dailyStats: this.processRepo.queryDailyStats(30),
-      storageInfo: collectStorageInfo()
+      storageInfo: collectStorageInfo(),
+      rebootCountdown: this.rebootScheduler.getCountdownState()
     }
   }
 
