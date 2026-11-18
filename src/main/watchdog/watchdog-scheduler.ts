@@ -22,7 +22,7 @@ import {
   executeTransitionAction,
   recordTargetEvent
 } from './watchdog-actions'
-import { RebootScheduler } from './reboot-scheduler'
+import { RebootScheduler, formatLocalDateKey } from './reboot-scheduler'
 
 export class WatchdogScheduler {
   private machines = new Map<string, ProcessStateMachine>()
@@ -318,17 +318,31 @@ export class WatchdogScheduler {
   async updateConfig(nextConfig: AppConfig): Promise<MonitorStateSnapshot> {
     const prevRunOnBoot = this.config.system.runOnBoot
     const prevInterval = this.config.system.checkIntervalMs
+    const prevRebootEnabledChanged = !this.config.reboot?.enabled && Boolean(nextConfig.reboot?.enabled)
     const prevRebootTimeChanged =
       this.config.reboot?.hour !== nextConfig.reboot?.hour ||
       this.config.reboot?.minute !== nextConfig.reboot?.minute
 
-    const configToSave: AppConfig =
-      prevRebootTimeChanged && nextConfig.reboot
-        ? {
-            ...nextConfig,
-            reboot: { ...nextConfig.reboot, lastExecutedDate: null }
-          }
-        : nextConfig
+    let configToSave: AppConfig = nextConfig
+    if ((prevRebootEnabledChanged || prevRebootTimeChanged) && nextConfig.reboot) {
+      const now = new Date()
+      const scheduledTodayMs = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        nextConfig.reboot.hour,
+        nextConfig.reboot.minute,
+        0,
+        0
+      ).getTime()
+      // 설정 저장 시점에 이미 금일 지정 시각이 지난 경우, 저장 즉시 재부팅되지 않도록 금일 완료 처리 후 다음 예정일부터 동작
+      const nextLastExecutedDate =
+        now.getTime() > scheduledTodayMs ? formatLocalDateKey(now) : null
+      configToSave = {
+        ...nextConfig,
+        reboot: { ...nextConfig.reboot, lastExecutedDate: nextLastExecutedDate }
+      }
+    }
 
     this.config = saveConfigAtomically(configToSave)
     this.syncMachinesFromConfig()

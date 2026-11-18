@@ -108,7 +108,7 @@ export function evaluateRebootSchedule(
   }
 
   const elapsedMs = nowMs - todayScheduledMs
-  if (elapsedMs <= 90_000) {
+  if (elapsedMs <= 300_000) {
     return {
       shouldTrigger: true,
       markExecutedToday: false,
