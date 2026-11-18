@@ -178,7 +178,7 @@ export class ProcessStateMachine {
 
       const elapsed = this.elapsedSecSince(this.stateEnteredAtNs, nowNs)
       if (elapsed >= this.target.gracefulTimeoutSec) {
-        const killPid = snapshot.pid
+        const killPid = this.pid || snapshot.pid
         const shouldRestart = this.stopThenRestart
         const wasPeriodic = this.periodicRestartInProgress
         this.stopThenRestart = false

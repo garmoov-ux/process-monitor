@@ -78,14 +78,17 @@ export async function executeTransitionAction(params: {
       )
     }
   } else if (action.type === 'FORCE_KILL_AND_RESTART' && action.pid) {
-    await forceKillProcessTree(action.pid)
+    const procName = target.watchProcessName || target.processName
+    const killed = await forceKillProcessTree(action.pid, procName)
     recordTargetEvent(
       processRepo,
       target,
       'FORCE_KILL',
-      'WARN',
+      killed ? 'WARN' : 'ERROR',
       action.pid,
-      `${action.reason || '응답 없음 감지'}로 강제 종료(하위 트리 포함) 수행`
+      killed
+        ? `${action.reason || '응답 없음 감지'}로 강제 종료(하위 트리 포함) 수행`
+        : `${action.reason || '강제 종료'} 실패 (대상 프로그램이 관리자 권한으로 실행 중일 수 있음)`
     )
     const spawnRes = await spawnTargetProcess(target)
     if (spawnRes.ok) {
@@ -102,9 +105,20 @@ export async function executeTransitionAction(params: {
         spawnRes.pid,
         `강제 종료 후 자동 재기동 완료 (프로세스 번호: ${spawnRes.pid ?? '-'})`
       )
+    } else {
+      machine.markPathInvalid(spawnRes.error || '강제 종료 후 재실행 실패')
+      recordTargetEvent(
+        processRepo,
+        target,
+        'PATH_ERROR',
+        'ERROR',
+        null,
+        `강제 종료 후 재실행 실패: ${spawnRes.error || '알 수 없는 오류'}`
+      )
     }
   } else if (action.type === 'FORCE_KILL_ONLY' && action.pid) {
-    await forceKillProcessTree(action.pid)
+    const procName = target.watchProcessName || target.processName
+    await forceKillProcessTree(action.pid, procName)
     recordTargetEvent(
       processRepo,
       target,
