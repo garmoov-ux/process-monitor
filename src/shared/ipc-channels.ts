@@ -1,0 +1,21 @@
+export const IPC_CHANNELS = {
+  GET_INITIAL_STATE: 'process-monitor:get-initial-state',
+  STATE_UPDATED: 'process-monitor:state-updated',
+  SCAN_RUNNING_PROCESSES: 'process-monitor:scan-running-processes',
+  PICK_EXECUTABLE_FILE: 'process-monitor:pick-executable-file',
+  PICK_DIRECTORY: 'process-monitor:pick-directory',
+  UPSERT_TARGET: 'process-monitor:upsert-target',
+  DELETE_TARGET: 'process-monitor:delete-target',
+  TOGGLE_TARGET_ENABLED: 'process-monitor:toggle-target-enabled',
+  CONTROL_TARGET: 'process-monitor:control-target',
+  RESET_CIRCUIT_BREAKER: 'process-monitor:reset-circuit-breaker',
+  TOGGLE_MAINTENANCE_MODE: 'process-monitor:toggle-maintenance-mode',
+  UPDATE_CONFIG: 'process-monitor:update-config',
+  SYNC_NTP_NOW: 'process-monitor:sync-ntp-now',
+  QUERY_EVENT_HISTORY: 'process-monitor:query-event-history',
+  QUERY_NTP_HISTORY: 'process-monitor:query-ntp-history',
+  QUERY_DAILY_STATS: 'process-monitor:query-daily-stats',
+  EXPORT_CSV_REPORT: 'process-monitor:export-csv-report',
+  EXPORT_PDF_REPORT: 'process-monitor:export-pdf-report',
+  OPEN_PATH_FOLDER: 'process-monitor:open-path-folder'
+} as const
