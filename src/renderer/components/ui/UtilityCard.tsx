@@ -14,19 +14,22 @@ export const UtilityCard: React.FC<UtilityCardProps> = ({
   title,
   badge,
   rightAction,
+  dark = false,
   className = '',
   bodyClassName = '',
   children
 }) => {
+  const surfaceClass = dark
+    ? 'bg-[#0f172a] text-slate-100 border border-[#334155]'
+    : 'bg-[#ffffff] text-[#0f172a] border border-[#cbd5e1]'
+
   return (
-    <section
-      className={`rounded-[10px] p-3 bg-[#111827] text-slate-100 border border-[#1e293b] flex flex-col min-h-0 ${className}`}
-    >
+    <section className={`rounded-[10px] p-3.5 flex flex-col min-h-0 ${surfaceClass} ${className}`}>
       {(title || rightAction) && (
-        <header className="flex items-center justify-between gap-2 mb-2 shrink-0">
+        <header className="flex items-center justify-between gap-2.5 mb-2.5 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {title && (
-              <h3 className="text-[13px] font-semibold tracking-[-0.015em] text-slate-100 whitespace-nowrap">
+              <h3 className="text-[14px] font-bold tracking-[-0.015em] whitespace-nowrap">
                 {title}
               </h3>
             )}

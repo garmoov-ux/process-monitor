@@ -19,17 +19,17 @@ export const OptionChip: React.FC<OptionChipProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className={`h-[25px] px-2.5 rounded-[6px] text-[11px] whitespace-nowrap shrink-0 inline-flex items-center gap-1 transition-all duration-150 active:scale-95 cursor-pointer select-none ${
+      className={`h-[27px] px-2.5 rounded-[6px] text-[11.5px] whitespace-nowrap shrink-0 inline-flex items-center gap-1 transition-all duration-150 active:scale-95 cursor-pointer select-none ${
         selected
-          ? 'bg-[#2563eb] text-white font-semibold border border-[#3b82f6]'
-          : 'bg-[#1e293b]/80 hover:bg-[#334155] text-slate-300 font-medium border border-[#334155]'
+          ? 'bg-[#2563eb] text-white font-semibold border border-[#2563eb]'
+          : 'bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#334155] font-medium border border-[#cbd5e1]'
       }`}
     >
       {children ?? (
         <>
           <span>{label}</span>
           {count !== undefined && (
-            <span className={`text-[10.5px] ${selected ? 'text-blue-100' : 'text-slate-400'}`}>
+            <span className={`text-[11px] ${selected ? 'text-blue-100' : 'text-[#64748b]'}`}>
               {count.toLocaleString()}
             </span>
           )}

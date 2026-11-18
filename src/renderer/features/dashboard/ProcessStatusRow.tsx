@@ -13,7 +13,6 @@ import {
   ProcessTargetConfig,
   ProcessTargetState
 } from '@shared/types/domain'
-import { PillButton } from '../../components/ui/PillButton'
 
 interface ProcessStatusRowProps {
   item: ProcessRuntimeStatus
@@ -30,43 +29,43 @@ function getStateBadgeMeta(state: ProcessTargetState): { label: string; classNam
     case 'RUNNING':
       return {
         label: '정상 가동',
-        className: 'bg-emerald-500/15 text-[#34d399] border border-emerald-500/30'
+        className: 'bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]'
       }
     case 'STARTUP_GRACE':
       return {
         label: '구동 유예',
-        className: 'bg-sky-500/15 text-[#38bdf8] border border-sky-500/30'
+        className: 'bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]'
       }
     case 'RESTART_PENDING':
       return {
         label: '재시작 대기',
-        className: 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+        className: 'bg-[#fef3c7] text-[#b45309] border border-[#fde68a]'
       }
     case 'HUNG_DETECTED':
       return {
         label: '응답 없음',
-        className: 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+        className: 'bg-[#ffe4e6] text-[#be123c] border border-[#fecdd3]'
       }
     case 'STOPPING':
       return {
         label: '종료 대기',
-        className: 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
+        className: 'bg-[#f1f5f9] text-[#475569] border border-[#cbd5e1]'
       }
     case 'CIRCUIT_OPEN':
       return {
         label: '연속실패 차단',
-        className: 'bg-rose-500/25 text-rose-200 border border-rose-500/40'
+        className: 'bg-[#ffe4e6] text-[#be123c] border border-[#fda4af]'
       }
     case 'INVALID_PATH':
       return {
         label: '경로 오류',
-        className: 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+        className: 'bg-[#ffe4e6] text-[#be123c] border border-[#fecdd3]'
       }
     case 'PAUSED':
     default:
       return {
         label: '일시정지',
-        className: 'bg-slate-800 text-slate-400 border border-slate-700'
+        className: 'bg-[#f1f5f9] text-[#64748b] border border-[#cbd5e1]'
       }
   }
 }
@@ -81,6 +80,9 @@ function formatDuration(sec: number): string {
   return `${s}초`
 }
 
+const iconBtnCls =
+  'w-[24px] h-[24px] rounded-[5px] bg-[#f8fafc] hover:bg-[#e2e8f0] border border-[#cbd5e1] text-[#334155] inline-flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none'
+
 export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
   item,
   onEditTarget,
@@ -94,43 +96,50 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
   const memText = item.memoryKb > 0 ? `${(item.memoryKb / 1024).toFixed(1)} 메가` : '-'
 
   return (
-    <tr className="hover:bg-[#1e293b]/40">
-      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
-        <div className="flex flex-col items-start gap-1">
+    <tr className="hover:bg-[#f8fafc] transition-colors">
+      <td className="py-2 px-3 align-middle whitespace-nowrap">
+        <div className="flex items-center gap-1.5">
           <span
-            className={`px-2 py-0.5 rounded-[5px] text-[10.5px] font-semibold whitespace-nowrap ${badge.className}`}
+            className={`px-2 py-0.5 rounded-[5px] text-[11px] font-bold whitespace-nowrap ${badge.className}`}
           >
             {badge.label}
           </span>
-          <label className="inline-flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={item.target.enabled}
-              onChange={(e) => onToggleTargetEnabled(item.target.id, e.target.checked)}
-              className="accent-[#2563eb] cursor-pointer w-3 h-3"
-            />
-            <span>{item.target.enabled ? '감시켜짐' : '감시꺼짐'}</span>
-          </label>
+          <button
+            type="button"
+            onClick={() => onToggleTargetEnabled(item.target.id, !item.target.enabled)}
+            title={item.target.enabled ? '클릭 시 개별 감시 일시정지' : '클릭 시 개별 감시 시작'}
+            className={`h-[20px] px-1.5 rounded-[4px] text-[10px] font-semibold border cursor-pointer transition-colors ${
+              item.target.enabled
+                ? 'bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]'
+                : 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]'
+            }`}
+          >
+            {item.target.enabled ? '감시중' : '꺼짐'}
+          </button>
         </div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle max-w-[200px]">
-        <div className="font-semibold text-slate-100 truncate">{item.target.name}</div>
-        <div className="text-[10.5px] text-slate-400 truncate" title={item.target.execPath}>
+      <td className="py-2 px-3 align-middle truncate">
+        <div className="font-bold text-[#0f172a] truncate" title={item.target.name}>
+          {item.target.name}
+        </div>
+        <div className="text-[11px] text-[#64748b] truncate" title={item.target.execPath}>
           {item.target.execPath}
         </div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
-        <div className="font-medium text-slate-200">
+      <td className="py-2 px-3 align-middle truncate">
+        <div className="font-semibold text-[#334155] truncate">
           {item.target.watchProcessName || item.target.processName}
         </div>
-        <div className="text-[10.5px] text-slate-400">번호: {item.pid ?? '미실행'}</div>
+        <div className="text-[11px] text-[#64748b]">번호: {item.pid ?? '미실행'}</div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle max-w-[155px]">
-        <div className="text-slate-200 truncate">{item.detectedWindowTitle || '-'}</div>
-        <div className="text-[10.5px] text-slate-400 truncate">
+      <td className="py-2 px-3 align-middle truncate">
+        <div className="text-[#334155] font-medium truncate">
+          {item.detectedWindowTitle || '-'}
+        </div>
+        <div className="text-[11px] text-[#64748b] truncate">
           {item.pid
             ? item.responding
               ? '응답 양호'
@@ -139,89 +148,89 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
         </div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
-        <div className="text-slate-200 font-medium">{formatDuration(item.uptimeSec)}</div>
-        <div className="text-[10.5px] text-slate-400">{memText}</div>
+      <td className="py-2 px-3 align-middle whitespace-nowrap">
+        <div className="text-[#0f172a] font-semibold">{formatDuration(item.uptimeSec)}</div>
+        <div className="text-[11px] text-[#64748b]">{memText}</div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
-        <div className="text-slate-200 font-medium">재시작 {item.totalRestartCount}회</div>
-        <div className="text-[10.5px] text-[#38bdf8]">
+      <td className="py-2 px-3 align-middle whitespace-nowrap">
+        <div className="text-[#0f172a] font-semibold">재시작 {item.totalRestartCount}회</div>
+        <div className="text-[11px] text-[#2563eb] font-medium">
           {item.countdownSec > 0
             ? `카운트: ${item.countdownSec}초`
-            : `유예 ${item.target.startupGraceSec}초 / 대기 ${item.target.restartDelaySec}초`}
+            : `유예 ${item.target.startupGraceSec}초 · 대기 ${item.target.restartDelaySec}초`}
         </div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle whitespace-nowrap text-right">
+      <td className="py-2 px-3 align-middle whitespace-nowrap text-right">
         <div className="inline-flex items-center justify-end gap-1">
           {item.state === 'CIRCUIT_OPEN' && (
-            <PillButton
-              variant="primary"
-              size="sm"
+            <button
+              type="button"
               onClick={() => onResetCircuit(item.target.id)}
               title="연속 실패 차단 해제"
+              className="h-[24px] px-2 rounded-[5px] bg-[#2563eb] text-white text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer"
             >
               <ShieldAlert className="w-3 h-3" />
               <span>해제</span>
-            </PillButton>
+            </button>
           )}
 
-          <PillButton
-            variant="pearl-capsule"
-            size="sm"
+          <button
+            type="button"
             onClick={() => onControlTarget(item.target.id, 'START')}
             disabled={Boolean(item.pid)}
             title="수동 시작"
+            className={iconBtnCls}
           >
-            <Play className="w-3 h-3 text-[#34d399]" />
-          </PillButton>
+            <Play className="w-3 h-3 text-[#059669]" />
+          </button>
 
-          <PillButton
-            variant="pearl-capsule"
-            size="sm"
+          <button
+            type="button"
             onClick={() => onControlTarget(item.target.id, 'RESTART')}
             title="단계별 종료 후 재시작"
+            className={iconBtnCls}
           >
-            <RotateCcw className="w-3 h-3 text-[#38bdf8]" />
-          </PillButton>
+            <RotateCcw className="w-3 h-3 text-[#2563eb]" />
+          </button>
 
-          <PillButton
-            variant="pearl-capsule"
-            size="sm"
+          <button
+            type="button"
             onClick={() => onControlTarget(item.target.id, 'STOP')}
             disabled={!item.pid}
             title="정상 종료 유도 (미종료 시 강제 종료)"
+            className={iconBtnCls}
           >
-            <Square className="w-3 h-3 text-rose-400" />
-          </PillButton>
+            <Square className="w-3 h-3 text-[#e11d48]" />
+          </button>
 
-          <PillButton
-            variant="pearl-capsule"
-            size="sm"
+          <button
+            type="button"
             onClick={() => onOpenExeLocation(item.target.execPath)}
             title="실행 파일 폴더 열기"
+            className={iconBtnCls}
           >
-            <FolderOpen className="w-3 h-3 text-slate-400" />
-          </PillButton>
+            <FolderOpen className="w-3 h-3 text-[#475569]" />
+          </button>
 
-          <PillButton
-            variant="pearl-capsule"
-            size="sm"
+          <button
+            type="button"
             onClick={() => onEditTarget(item.target)}
             title="대상 설정 수정"
+            className={iconBtnCls}
           >
-            <Edit3 className="w-3 h-3 text-slate-200" />
-          </PillButton>
+            <Edit3 className="w-3 h-3 text-[#0f172a]" />
+          </button>
 
-          <PillButton
-            variant="pearl-capsule"
-            size="sm"
+          <button
+            type="button"
             onClick={() => onDeleteTarget(item.target.id)}
             title="목록에서 삭제"
+            className={iconBtnCls}
           >
-            <Trash2 className="w-3 h-3 text-rose-400" />
-          </PillButton>
+            <Trash2 className="w-3 h-3 text-[#e11d48]" />
+          </button>
         </div>
       </td>
     </tr>

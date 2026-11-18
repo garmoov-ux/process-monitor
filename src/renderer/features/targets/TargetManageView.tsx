@@ -198,7 +198,7 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
   }, [processes, search])
 
   return (
-    <div className="flex-1 min-h-0 grid grid-cols-12 gap-2.5">
+    <div className="h-full p-3.5 w-full min-h-0 grid grid-cols-12 gap-3">
       {/* 좌측 5칸: 감시 대상 등록/수정 입력 폼 */}
       <div className="col-span-5 min-h-0 flex flex-col">
         <TargetFormCard
@@ -213,17 +213,17 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
         />
       </div>
 
-      {/* 우측 7칸: 실행 중 프로세스 원클릭 불러오기 & 등록 대상 목록 (창 잘림 없는 고정 비율 테이블) */}
-      <section className="col-span-7 bg-[#111827] border border-[#1e293b] rounded-[10px] p-3 flex flex-col min-h-0">
-        <header className="flex items-center justify-between gap-2 mb-2 shrink-0">
-          <div className="inline-flex p-0.5 rounded-[7px] bg-[#090d16] border border-[#1e293b]">
+      {/* 우측 7칸: 방법 A 단일 테두리 시트 (카드 안에 카드 느낌 제거 & 창 잘림 없는 고정 비율 테이블) */}
+      <section className="col-span-7 bg-[#ffffff] border border-[#cbd5e1] rounded-[10px] overflow-hidden flex flex-col min-h-0">
+        <div className="px-3.5 py-2.5 border-b border-[#cbd5e1] flex items-center justify-between gap-2 shrink-0">
+          <div className="inline-flex p-0.5 rounded-[8px] bg-[#e2e8f0]">
             <button
               type="button"
               onClick={() => setRightMode('RUNNING')}
-              className={`h-[25px] px-2.5 rounded-[5px] text-[11.5px] font-medium whitespace-nowrap cursor-pointer ${
+              className={`h-[26px] px-3 rounded-[6px] text-[12px] font-medium whitespace-nowrap cursor-pointer ${
                 rightMode === 'RUNNING'
                   ? 'bg-[#2563eb] text-white font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-[#334155] hover:text-[#0f172a]'
               }`}
             >
               실행 중인 프로그램 선택 ({filteredRunning.length})
@@ -231,10 +231,10 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
             <button
               type="button"
               onClick={() => setRightMode('REGISTERED')}
-              className={`h-[25px] px-2.5 rounded-[5px] text-[11.5px] font-medium whitespace-nowrap cursor-pointer ${
+              className={`h-[26px] px-3 rounded-[6px] text-[12px] font-medium whitespace-nowrap cursor-pointer ${
                 rightMode === 'REGISTERED'
                   ? 'bg-[#2563eb] text-white font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : 'text-[#334155] hover:text-[#0f172a]'
               }`}
             >
               등록된 감시 목록 ({processes.length})
@@ -254,42 +254,42 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
                   size="sm"
                   onClick={() => void refreshRunning()}
                 >
-                  <RefreshCw className={`w-3 h-3 text-[#38bdf8] ${scanning ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3 h-3 text-[#2563eb] ${scanning ? 'animate-spin' : ''}`} />
                   <span>새로고침</span>
                 </PillButton>
               </>
             )}
           </div>
-        </header>
+        </div>
 
-        <div className="mb-2 shrink-0">
+        <div className="px-3.5 py-2 border-b border-[#e2e8f0] bg-[#f8fafc] shrink-0">
           <SearchInput
             value={search}
             onChange={setSearch}
             placeholder={
               rightMode === 'RUNNING'
-                ? '실행 중인 프로그램 이름, 창 제목, 경로 검색 (행 클릭 시 좌측에 자동 입력)...'
-                : '등록된 감시 대상 검색 (행 클릭 시 좌측에서 수정)...'
+                ? '실행 중인 프로그램 이름 · 창 제목 · 경로 검색 (행 클릭 시 좌측에 자동 입력)'
+                : '등록된 감시 대상 검색 (행 클릭 시 좌측에서 수정)'
             }
             className="w-full"
           />
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto border border-[#1e293b] rounded-[8px] bg-[#0b0f19]/70">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {rightMode === 'RUNNING' ? (
-            <table className="w-full table-fixed text-left border-collapse text-[11.5px]">
-              <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300 z-10">
+            <table className="w-full table-fixed text-left border-collapse text-[12px]">
+              <thead className="sticky top-0 bg-[#f1f5f9] border-b border-[#cbd5e1] text-[#334155] z-10">
                 <tr>
-                  <th className="w-[32%] py-2 px-2.5 font-semibold whitespace-nowrap">프로세스명 (번호)</th>
-                  <th className="w-[28%] py-2 px-2.5 font-semibold whitespace-nowrap">창 제목</th>
-                  <th className="w-[26%] py-2 px-2.5 font-semibold whitespace-nowrap">실행 경로</th>
-                  <th className="w-[14%] py-2 px-2.5 font-semibold whitespace-nowrap text-right">선택</th>
+                  <th className="w-[32%] py-2 px-3 font-semibold whitespace-nowrap">프로세스명 (번호)</th>
+                  <th className="w-[28%] py-2 px-3 font-semibold whitespace-nowrap">창 제목</th>
+                  <th className="w-[26%] py-2 px-3 font-semibold whitespace-nowrap">실행 경로</th>
+                  <th className="w-[14%] py-2 px-3 font-semibold whitespace-nowrap text-right">선택</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1e293b]/70">
+              <tbody className="divide-y divide-[#e2e8f0] bg-[#ffffff]">
                 {filteredRunning.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-12 text-center text-slate-500">
+                    <td colSpan={4} className="py-16 text-center text-[#64748b]">
                       조회된 실행 중 프로그램이 없습니다.
                     </td>
                   </tr>
@@ -301,21 +301,21 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
                       <tr
                         key={proc.pid}
                         onClick={() => handleSelectRunning(proc)}
-                        className="hover:bg-[#1e293b]/60 cursor-pointer transition-colors"
+                        className="hover:bg-[#eff6ff]/60 cursor-pointer transition-colors"
                       >
-                        <td className="py-1.5 px-2.5 truncate font-semibold text-slate-100" title={proc.processName}>
+                        <td className="py-2 px-3 truncate font-bold text-[#0f172a]" title={proc.processName}>
                           {proc.processName}{' '}
-                          <span className="text-slate-500 font-normal">({proc.pid})</span>
+                          <span className="text-[#64748b] font-normal">({proc.pid})</span>
                         </td>
-                        <td className="py-1.5 px-2.5 truncate text-[#38bdf8]" title={proc.windowTitle}>
+                        <td className="py-2 px-3 truncate text-[#2563eb] font-medium" title={proc.windowTitle}>
                           {proc.windowTitle || '-'}
                         </td>
-                        <td className="py-1.5 px-2.5 truncate text-slate-400" title={proc.execPath}>
+                        <td className="py-2 px-3 truncate text-[#64748b]" title={proc.execPath}>
                           {proc.execPath || '권한 제한 경로'}
                         </td>
-                        <td className="py-1.5 px-2.5 text-right whitespace-nowrap">
+                        <td className="py-2 px-3 text-right whitespace-nowrap">
                           {already ? (
-                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-[5px] bg-emerald-500/15 text-[#34d399] text-[10px] font-semibold">
+                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-[5px] bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0] text-[10.5px] font-bold">
                               <Check className="w-3 h-3" />
                               등록됨
                             </span>
@@ -340,19 +340,19 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
               </tbody>
             </table>
           ) : (
-            <table className="w-full table-fixed text-left border-collapse text-[11.5px]">
-              <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300 z-10">
+            <table className="w-full table-fixed text-left border-collapse text-[12px]">
+              <thead className="sticky top-0 bg-[#f1f5f9] border-b border-[#cbd5e1] text-[#334155] z-10">
                 <tr>
-                  <th className="w-[28%] py-2 px-2.5 font-semibold whitespace-nowrap">프로그램 이름</th>
-                  <th className="w-[24%] py-2 px-2.5 font-semibold whitespace-nowrap">프로세스명</th>
-                  <th className="w-[34%] py-2 px-2.5 font-semibold whitespace-nowrap">실행 파일 경로</th>
-                  <th className="w-[14%] py-2 px-2.5 font-semibold whitespace-nowrap text-right">삭제</th>
+                  <th className="w-[28%] py-2 px-3 font-semibold whitespace-nowrap">프로그램 이름</th>
+                  <th className="w-[24%] py-2 px-3 font-semibold whitespace-nowrap">프로세스명</th>
+                  <th className="w-[34%] py-2 px-3 font-semibold whitespace-nowrap">실행 파일 경로</th>
+                  <th className="w-[14%] py-2 px-3 font-semibold whitespace-nowrap text-right">삭제</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1e293b]/70">
+              <tbody className="divide-y divide-[#e2e8f0] bg-[#ffffff]">
                 {filteredRegistered.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-12 text-center text-slate-500">
+                    <td colSpan={4} className="py-16 text-center text-[#64748b]">
                       등록된 감시 대상이 없습니다.
                     </td>
                   </tr>
@@ -364,26 +364,26 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
                         key={item.target.id}
                         onClick={() => loadTargetIntoForm(item.target)}
                         className={`cursor-pointer transition-colors ${
-                          selected ? 'bg-[#2563eb]/20' : 'hover:bg-[#1e293b]/50'
+                          selected ? 'bg-[#eff6ff]' : 'hover:bg-[#f8fafc]'
                         }`}
                       >
-                        <td className="py-2 px-2.5 truncate font-semibold text-slate-100">
+                        <td className="py-2 px-3 truncate font-bold text-[#0f172a]">
                           {item.target.name}
                         </td>
-                        <td className="py-2 px-2.5 truncate text-slate-300">
+                        <td className="py-2 px-3 truncate text-[#334155] font-medium">
                           {item.target.processName}
                         </td>
-                        <td className="py-2 px-2.5 truncate text-slate-400" title={item.target.execPath}>
+                        <td className="py-2 px-3 truncate text-[#64748b]" title={item.target.execPath}>
                           {item.target.execPath}
                         </td>
                         <td
-                          className="py-2 px-2.5 text-right whitespace-nowrap"
+                          className="py-2 px-3 text-right whitespace-nowrap"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button
                             type="button"
                             onClick={() => void onDeleteTarget(item.target.id)}
-                            className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
+                            className="p-1 text-[#64748b] hover:text-[#e11d48] cursor-pointer"
                             title="삭제"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

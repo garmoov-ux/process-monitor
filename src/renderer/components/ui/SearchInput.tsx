@@ -16,13 +16,13 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 }) => {
   return (
     <div className={`relative flex items-center ${className}`}>
-      <Search className="w-3 h-3 text-slate-400 absolute left-2.5 pointer-events-none" />
+      <Search className="w-3.5 h-3.5 text-[#64748b] absolute left-2.5 pointer-events-none" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-[26px] pl-7 pr-2.5 rounded-[6px] bg-[#0f172a] text-slate-100 text-[11.5px] border border-[#334155] focus:border-[#38bdf8] focus:outline-none placeholder:text-slate-500"
+        className="w-full h-[28px] pl-7.5 pr-2.5 rounded-[7px] bg-[#f8fafc] text-[#0f172a] text-[12px] border border-[#cbd5e1] focus:bg-[#ffffff] focus:outline-2 focus:outline-[#2563eb] placeholder:text-[#64748b]"
       />
     </div>
   )

@@ -27,7 +27,7 @@ function SegmentedControl<T extends string | number | boolean>({
   onChange: (val: T) => void
 }) {
   return (
-    <div className="inline-flex items-center p-0.5 rounded-[7px] bg-[#090d16] border border-[#1e293b] gap-0.5 shrink-0">
+    <div className="inline-flex items-center p-0.5 rounded-[8px] bg-[#e2e8f0] gap-0.5 shrink-0">
       {options.map((opt) => {
         const active = opt.value === value
         return (
@@ -35,10 +35,10 @@ function SegmentedControl<T extends string | number | boolean>({
             key={String(opt.value)}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`h-[24px] px-2.5 rounded-[5px] text-[11px] whitespace-nowrap transition-all duration-150 active:scale-95 cursor-pointer select-none ${
+            className={`h-[26px] px-2.5 rounded-[6px] text-[12px] whitespace-nowrap transition-all duration-150 active:scale-95 cursor-pointer select-none ${
               active
                 ? 'bg-[#2563eb] text-white font-semibold'
-                : 'text-slate-400 hover:text-slate-200 font-medium'
+                : 'text-[#334155] hover:text-[#0f172a] font-medium'
             }`}
           >
             {opt.label}
@@ -89,7 +89,7 @@ const NTP_TIMEOUT_OPTIONS: SegmentOption<number>[] = [
 ]
 
 const inputCls =
-  'h-[28px] px-2.5 rounded-[6px] bg-[#090d16] border border-[#334155] text-[11.5px] text-slate-100 focus:border-[#38bdf8] focus:outline-none'
+  'h-[28px] px-2.5 rounded-[6px] bg-[#ffffff] border border-[#cbd5e1] text-[12px] text-[#0f172a] focus:outline-2 focus:outline-[#2563eb]'
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   config,
@@ -137,39 +137,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const ports = Array.isArray(draft.ntp.ports) ? draft.ntp.ports : [123, 123, 123]
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-2.5">
-      {/* 상단 설정 저장 액션 바 (systemcheck 스타일 다크 테마) */}
-      <div className="bg-[#111827] border border-[#1e293b] rounded-[10px] px-3.5 py-2 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-[13.5px] font-bold text-slate-100 whitespace-nowrap">
+    <div className="h-full p-3.5 w-full min-h-0 flex flex-col gap-3">
+      {/* 상단 설정 저장 액션 바 (atoj / systemcheck 스타일) */}
+      <div className="bg-[#ffffff] border border-[#cbd5e1] rounded-[10px] px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <h2 className="text-[15px] font-bold text-[#0f172a] whitespace-nowrap">
             전체 환경 설정 관리
           </h2>
-          <span className="text-[11px] text-slate-400 truncate">
-            감시 주기, 부팅 자동 실행, 1·2·3차 시간 서버(주소·포트) 및 보관 기간을 관리합니다.
+          <span className="text-[12px] text-[#64748b] truncate">
+            감시 주기, 부팅 자동 실행, 다중 시간 동기화 서버(주소·포트) 및 보관 기간을 관리합니다.
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
           <PillButton variant="pearl-capsule" size="sm" onClick={() => void onRunCleanupNow()}>
-            <Sparkles className="w-3 h-3 text-[#38bdf8]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#2563eb]" />
             <span>경과 데이터 즉시 정리</span>
           </PillButton>
           <PillButton variant="primary" size="sm" onClick={() => void onSaveConfig(draft)}>
-            <Save className="w-3 h-3" />
+            <Save className="w-3.5 h-3.5" />
             <span>설정 저장</span>
           </PillButton>
         </div>
       </div>
 
       {/* 본문 2단 그리드 */}
-      <div className="flex-1 min-h-0 grid grid-cols-12 gap-2.5">
-        <div className="col-span-6 min-h-0 flex flex-col gap-2.5">
+      <div className="flex-1 min-h-0 grid grid-cols-12 gap-3">
+        <div className="col-span-6 min-h-0 flex flex-col gap-3">
           <UtilityCard title="프로세스 감시 및 시작 동작 설정" className="shrink-0">
-            <div className="rounded-[8px] bg-[#0b0f19] border border-[#1e293b] divide-y divide-[#1e293b]">
+            <div className="rounded-[8px] bg-[#f8fafc] border border-[#cbd5e1] divide-y divide-[#e2e8f0]">
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">프로세스 상태 점검 주기</div>
-                  <div className="text-[10.5px] text-slate-400">실행 중 프로그램 스냅샷 수집 간격</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">프로세스 상태 점검 주기</div>
+                  <div className="text-[11px] text-[#64748b]">실행 중 프로그램 스냅샷 수집 간격</div>
                 </div>
                 <SegmentedControl
                   options={SCAN_INTERVAL_OPTIONS}
@@ -185,10 +185,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">
+                  <div className="text-[13px] font-semibold text-[#0f172a]">
                     부팅 시 자동 실행 ({summary.bootRegistered ? '등록됨' : '미등록'})
                   </div>
-                  <div className="text-[10.5px] text-slate-400">작업 스케줄러 최고 권한 자동 기동</div>
+                  <div className="text-[11px] text-[#64748b]">작업 스케줄러 최고 권한 자동 기동</div>
                 </div>
                 <SegmentedControl
                   options={BOOL_OPTIONS}
@@ -204,8 +204,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">창 닫기 버튼 클릭 동작</div>
-                  <div className="text-[10.5px] text-slate-400">트레이 우클릭 메뉴에서 완전 종료 가능</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">창 닫기 버튼 클릭 동작</div>
+                  <div className="text-[11px] text-[#64748b]">트레이 우클릭 메뉴에서 완전 종료 가능</div>
                 </div>
                 <SegmentedControl
                   options={CLOSE_OPTIONS}
@@ -221,8 +221,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">시작 시 트레이 최소화로 구동</div>
-                  <div className="text-[10.5px] text-slate-400">무인 현장 부팅 시 창을 숨기고 시작</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">시작 시 트레이 최소화로 구동</div>
+                  <div className="text-[11px] text-[#64748b]">무인 현장 부팅 시 창을 숨기고 시작</div>
                 </div>
                 <SegmentedControl
                   options={BOOL_OPTIONS}
@@ -239,15 +239,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </UtilityCard>
 
           <UtilityCard
-            title="로그 및 이력 보관 기간 설정"
+            title="보관 기간 및 자동 삭제"
             className="flex-1 min-h-0"
             bodyClassName="justify-between"
           >
-            <div className="rounded-[8px] bg-[#0b0f19] border border-[#1e293b] divide-y divide-[#1e293b]">
+            <div className="rounded-[8px] bg-[#f8fafc] border border-[#cbd5e1] divide-y divide-[#e2e8f0]">
               <div className="flex items-center justify-between gap-2 px-3 py-2.5">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">로그 및 내장 데이터 보관 일수</div>
-                  <div className="text-[10.5px] text-slate-400">보관 기간 경과 파일 및 이력 자동 정리</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">로그 및 내장 데이터 보관 기간</div>
+                  <div className="text-[11px] text-[#64748b]">보관 기간 경과 파일 및 이력 자동 정리</div>
                 </div>
                 <SegmentedControl
                   options={RETENTION_OPTIONS}
@@ -262,16 +262,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 flex items-center justify-between px-1 pt-1">
-              <span>모든 설정은 정전 시 손상 방지를 위해 원자적 쓰기로 저장됩니다.</span>
-              <span className="font-semibold text-[#38bdf8]">우측 상단 [설정 저장] 클릭</span>
+            <div className="text-[11.5px] text-[#64748b] flex items-center justify-between px-1 pt-1">
+              <span>보관 기간 경과 데이터는 자동 정리됩니다.</span>
+              <span className="font-semibold text-[#2563eb]">우측 상단 [설정 저장] 클릭 시 반영</span>
             </div>
           </UtilityCard>
         </div>
 
-        <div className="col-span-6 min-h-0 flex flex-col gap-2.5">
+        <div className="col-span-6 min-h-0 flex flex-col gap-3">
           <UtilityCard
-            title="다중 시간 동기화 서버 및 포트 설정 (1차 -> 2차 -> 3차)"
+            title="다중 시간 동기화 서버 및 포트 설정"
             rightAction={
               <PillButton
                 type="button"
@@ -279,18 +279,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 size="sm"
                 onClick={() => void handleTestNtp()}
               >
-                <RefreshCw className={`w-3 h-3 ${testingNtp ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${testingNtp ? 'animate-spin' : ''}`} />
                 <span>즉시 동기화 테스트</span>
               </PillButton>
             }
             className="flex-1 min-h-0"
             bodyClassName="justify-between"
           >
-            <div className="rounded-[8px] bg-[#0b0f19] border border-[#1e293b] divide-y divide-[#1e293b]">
+            <div className="rounded-[8px] bg-[#f8fafc] border border-[#cbd5e1] divide-y divide-[#e2e8f0]">
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">자동 시간 동기화 사용 여부</div>
-                  <div className="text-[10.5px] text-slate-400">1차 서버 실패 시 2차, 3차 서버로 자동 전환</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">자동 시간 동기화 사용 여부</div>
+                  <div className="text-[11px] text-[#64748b]">1차 서버 실패 시 2차, 3차 서버로 자동 전환</div>
                 </div>
                 <SegmentedControl
                   options={BOOL_OPTIONS}
@@ -306,7 +306,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               {([0, 1, 2] as const).map((idx) => (
                 <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2">
-                  <span className="text-[11.5px] font-semibold text-slate-300 w-[86px] shrink-0">
+                  <span className="text-[12.5px] font-semibold text-[#0f172a] w-[86px] shrink-0">
                     {idx + 1}차 시간 서버
                   </span>
                   <input
@@ -316,7 +316,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     placeholder="시간 서버 도메인 또는 주소"
                     className={`${inputCls} flex-1 min-w-0`}
                   />
-                  <span className="text-[11px] text-slate-400 shrink-0">포트</span>
+                  <span className="text-[11.5px] font-medium text-[#475569] shrink-0">포트</span>
                   <input
                     type="number"
                     min={1}
@@ -330,8 +330,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">자동 동기화 반복 주기</div>
-                  <div className="text-[10.5px] text-slate-400">주기적으로 시스템 시각 오차를 보정</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">자동 동기화 반복 주기</div>
+                  <div className="text-[11px] text-[#64748b]">주기적으로 시스템 시각 오차를 보정</div>
                 </div>
                 <SegmentedControl
                   options={NTP_INTERVAL_OPTIONS}
@@ -347,8 +347,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">서버 응답 대기 시간</div>
-                  <div className="text-[10.5px] text-slate-400">초과 시 다음 예비 서버로 즉시 전환</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">서버 응답 대기 시간</div>
+                  <div className="text-[11px] text-[#64748b]">초과 시 다음 예비 서버로 즉시 전환</div>
                 </div>
                 <SegmentedControl
                   options={NTP_TIMEOUT_OPTIONS}
@@ -364,8 +364,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-200">시간 급변 허용 한계 (초)</div>
-                  <div className="text-[10.5px] text-slate-400">초과 오차 발생 시 시스템 시각 변경 보류</div>
+                  <div className="text-[13px] font-semibold text-[#0f172a]">시간 급변 허용 한계 (초)</div>
+                  <div className="text-[11px] text-[#64748b]">초과 오차 발생 시 시스템 시각 변경 보류</div>
                 </div>
                 <input
                   type="number"
@@ -383,7 +383,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 px-1 pt-1">
+            <div className="text-[11.5px] text-[#64748b] px-1 pt-1">
               기본 시간 동기화 포트는 123번이며, 사설 시간 서버 운용 시 개별 포트를 지정할 수 있습니다.
             </div>
           </UtilityCard>

@@ -1,22 +1,85 @@
-# ProcessMonitor
+# 프로세스 모니터 (ProcessMonitor) - 다중 프로그램 자동 복구 및 시간 동기화 시스템 (v1.0.0)
 
-Windows 기반 다중 프로세스 실시간 감시·자동 복구(Watchdog) 및 다중 NTP 시간 동기화 데스크톱 애플리케이션 (Electron + React 19 + SQLite)
+- **개발·기술지원**: ㈜이노네트웍스 강홍선 (`s_gain@naver.com`)
 
-## 1. 주요 기능
-- **다중 프로세스 감시 및 독립 상태 머신**: 실행 중인 프로세스 선택 또는 파일 직접 지정을 통해 대상을 등록하고, 개별 유예 시간(`startupGraceSec`), 재시작 대기 시간(`restartDelaySec`), 단계별 종료(`WM_CLOSE` -> `taskkill /F /T`), 응답 없음(`Hung`) 감지, 무한 재시작 방지(Circuit Breaker)를 독립 수행합니다.
-- **다중 NTP 서버 시간 동기화**: 1차/2차/3차 NTP 서버 Failover(UDP 123 포트 SNTP) 및 과도한 시간 오차(`maxOffsetLimitSec`) 안전장치를 통해 현장 무인 PC의 시스템 시간을 정확하게 유지합니다.
-- **내장 SQLite(`WAL` 모드) 및 일자별 로그**: 프로세스 기동/종료/장애 이력, 일별 가동률(Uptime %) 통계, 시간 동기화 이력을 SQLite DB와 일자별 로그 파일에 동시 기록하고 CSV/PDF 보고서 내보내기를 지원합니다.
-- **무인 운영 편의 기능**: 관리자 권한(`requireAdministrator`) 구동, Windows 작업 스케줄러(`schtasks`) 부팅 자동 실행, 단일 인스턴스 락, 시스템 트레이 상주, 현장 점검용 전체 감시 일시정지(Maintenance Mode)를 지원합니다.
+무인/현장 운영 PC에서 핵심 프로그램들의 실행 상태(**정상 가동**, **비정상 종료**, **응답 없음 멈춤**)를 실시간 감시하여 자동 재기동하고, 1·2·3차 다중 시간 동기화 서버(개별 포트 지정 및 자동 전환)를 통해 시스템 시각을 정밀하게 유지하는 Windows 10/11 전용 데스크톱 관제 애플리케이션입니다.
 
-## 2. 기술 스택
-- **Framework**: Electron 34 + `electron-vite` 3 + TypeScript 5.7
-- **Frontend**: React 19 + Tailwind CSS v4 + `lucide-react` + `Pretendard` 오프라인 폰트 (`DESIGN.md` Apple Design System 적용)
-- **Database & Native**: `better-sqlite3` (`WAL` 모드), `iconv-lite` (`CP949` 인코딩 처리), Node.js `dgram` (SNTP)
-- **Testing & Packaging**: `Vitest` + `electron-builder`
+---
 
-## 3. 문서 구성
-- [code_artifact.md](./code_artifact.md): 상세 시스템 개발 요구사항 정의서
-- [AGENTS.md](./AGENTS.md): 프로젝트 아키텍처 및 코딩 표준 마스터 규칙
-- [DESIGN.md](./DESIGN.md): UI/UX 디자인 시스템 명세
-- `.agents/rules/`: 도메인 아키텍처, 컴포넌트 분리, 디자인 시스템, 보안, 테스트, Git 워크플로우 6대 세부 규칙
-- `.agents/skills/`: Electron, SQLite, React 19, Tailwind v4, UI/UX, Playwright 프로젝트 로컬 스킬 세트
+## 1. 배포 및 단독 실행 안내 (`ProcessMonitor_Portable.exe`)
+
+빌드 완료 후 `release/ProcessMonitor_Portable.exe` **파일 1개만** 원하는 폴더에 복사하여 바로 사용할 수 있습니다.
+- 실행 파일 이름을 `ProcessMonitor.exe` 등 원하는 이름으로 변경해도 정상 동작합니다.
+- 최초 실행 시 실행 파일이 위치한 폴더를 기준으로 아래 파일과 폴더를 스스로 자동 생성합니다:
+  - `config.json`: 환경 설정 파일 (정전 시 파일 손상을 방지하는 임시 파일 플러시 후 교체 원자적 쓰기 적용)
+  - `data/app.db`: 내장 데이터베이스 파일 (`WAL` 모드 적용 — 감시 대상 메타데이터, 기동·장애 이력, 시간 동기화 기록, 일자별 가동률 통계 영구 저장)
+  - `logs/`: 일자별 상세 한글 로그(`YYYYMMDD_system.log`, `YYYYMMDD_process.log`) 자동 기록 폴더
+
+---
+
+## 2. 핵심 기능 및 아키텍처 특징
+
+1. **콤팩트 창(`1040 × 680`) 및 좌측 다크 아이콘 사이드바 (`감시`) + 화이트·슬레이트 관제 UI**
+   - `현황` · `대상` · `이력` · `통계` · `로그` · `설정` · `정보` 7개 본문 메뉴와 하단 `[감시중/점검모드]`, `[시간동기]` 퀵 액션 버튼으로 구성된 일관된 관제 화면을 제공합니다.
+   - 카드 안에 카드가 중첩되는 이중 테두리를 배제하고 단일 테두리 시트 구조와 오프라인 내장 **프리텐다드(`Pretendard`)** 폰트를 전면 적용했습니다.
+   - 작업표시줄 및 트레이에서 `AtoJ`(파란색), `SystemCheck`(초록색)와 즉시 구분되는 **인디고 블루 심박 펄스 파형 전용 아이콘**을 내장했습니다.
+
+2. **단조 증가 시계 기반 8대 독립 상태 머신 및 단계별 종료·복구**
+   - 시간 동기화로 시스템 시계가 변경되어도 타이머가 흔들리지 않도록 단조 증가 시계(`process.hrtime.bigint()`)를 기준으로 개별 프로세스 상태를 독립 관리합니다.
+   - **지원 상태 (8종)**: `정상 가동`, `구동 유예`, `재시작 대기`, `응답 없음`, `종료 대기`, `연속실패 차단`, `일시정지`, `경로 오류`
+   - **단계별 종료**: 종료 또는 재시작 시 1단계로 정상 종료(`taskkill /PID`)를 유도하여 유예 시간 동안 대기하고, 미종료 시에만 2단계로 하위 자식 프로세스 트리까지 강제 종료(`taskkill /F /T /PID`)합니다.
+   - **응답 없음 감지 및 연속 실패 차단**: 프로그램 창이 멈춘 상태(`Responding == false`)가 설정 횟수 이상 연속되면 강제 재시작하며, 지정된 시간 창 내 최대 재시작 횟수 초과 시 무한 재시작을 자동 차단합니다.
+
+3. **감시 대상 등록 · 관리 전용 2단 화면 (`대상` 메뉴)**
+   - 팝업 모달의 화면 잘림 없이 좌측 5칸에는 **감시 프로세스 등록·수정 입력폼**, 우측 7칸에는 **현재 실행 중인 프로그램 선택 / 등록된 감시 목록**을 배치했습니다.
+   - 실행 중인 프로그램 행을 클릭하면 프로그램 이름, 프로세스명, 창 제목, 실행 파일 전체 경로, 기본 작업 폴더가 좌측 입력란에 원클릭으로 자동 입력됩니다.
+
+4. **1·2·3차 다중 시간 동기화 서버 (개별 포트 지정 및 안전장치)**
+   - Windows 시간 서비스가 비활성화된 현장 PC에서도 동작하도록 UDP 패킷으로 직접 시간 오차와 왕복 지연 시간을 계산합니다.
+   - 1차, 2차, 3차 시간 서버 주소와 **개별 포트 번호(기본 `123`)**를 각각 지정할 수 있으며, 1차 서버 응답 실패 시 즉시 2차 → 3차 예비 서버로 자동 전환합니다.
+   - 측정된 시간 오차가 허용 한계(기본 `3,600초`)를 초과하면 시스템 시계 반영을 자동 보류하고 경고 이력을 남깁니다.
+
+5. **이력 조회, 가동률 통계, 실시간 로그 및 현장 유지보수 도구**
+   - **이력 · 통계**: 프로세스 제어/장애 이력 및 시간 동기화 이력을 필터링·검색하고 **표 파일(`.csv`) 저장** 및 **A4 문서 보고서(`.pdf`) 출력**을 지원합니다.
+   - **정보**: 프로그램 기본 명세(`속성 : 값`), 버전 업데이트 기록, 환경 설정/데이터베이스/로그 폴더의 파일 개수·용량 확인 및 원클릭 폴더 열기, 경과 파일 즉시 정리를 제공합니다.
+
+---
+
+## 3. 프로젝트 폴더 구조
+
+```plaintext
+src/
+├── shared/                       # Main과 Renderer 공유 타입 및 IPC 채널 정의
+├── main/                         # Electron Main 프로세스
+│   ├── index.ts                  # 단일 인스턴스 락, 창(1040x680) 및 트레이 초기화
+│   ├── tray.ts                   # 전용 심박 펄스 아이콘 생성 및 트레이 컨텍스트 메뉴
+│   ├── config/                   # 포터블 경로 해석 및 config.json 원자적 쓰기/읽기
+│   ├── db/                       # SQLite(WAL 모드) 스키마 및 프로세스/시간동기화 리포지토리
+│   ├── watchdog/                 # 배치 스냅샷 스캐너, 8대 상태 머신, 프로세스 제어기, 작업 스케줄러 연동
+│   ├── ntp/                      # 다중 시간 서버(주소·포트) 쿼리 및 자동 전환 스케줄러
+│   ├── report/                   # 표 파일(CSV) 및 A4 문서 보고서(PDF) 생성기
+│   └── ipc/                      # IPC 핸들러 등록
+├── preload/                      # ContextBridge 보안 브릿지 (window.processMonitorApi)
+└── renderer/                     # React 19 + Tailwind CSS v4 + Pretendard 오프라인 폰트 UI
+```
+
+---
+
+## 4. 개발 및 빌드 명령어
+
+```powershell
+# 1. 저장소 복제 및 초기 환경 구성
+git clone https://github.com/garmoov-ux/process-monitor.git
+cd process-monitor
+npm run setup
+
+# 2. 타입 검사 및 단위 테스트 실행
+npm run typecheck
+npm test
+
+# 3. 개발 모드 실행
+npm run dev
+
+# 4. Windows 배포용 실행 파일 빌드 (release/ProcessMonitor_Portable.exe, ProcessMonitor_Setup.exe)
+npm run dist:win
+```

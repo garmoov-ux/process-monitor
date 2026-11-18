@@ -5,7 +5,6 @@ import {
   ProcessRuntimeStatus,
   ProcessTargetConfig
 } from '@shared/types/domain'
-import { UtilityCard } from '../../components/ui/UtilityCard'
 import { OptionChip } from '../../components/ui/OptionChip'
 import { SearchInput } from '../../components/ui/SearchInput'
 import { PillButton } from '../../components/ui/PillButton'
@@ -72,24 +71,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [processes, filterState, search])
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-2.5">
+    <div className="h-full p-3.5 w-full flex flex-col gap-3 min-h-0">
       <DashboardHeroTile
         summary={summary}
         onOpenAddModal={onOpenAddModal}
         onSyncNtpNow={onSyncNtpNow}
       />
 
-      <UtilityCard
-        title="감시 프로세스 목록"
-        badge={
-          summary.maintenanceMode ? (
-            <span className="px-2 py-0.5 rounded-[5px] bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10.5px] font-medium">
-              전체 점검 모드 (자동 복구 일시정지)
+      {/* 방법 A: 카드 안의 카드 느낌을 없앤 단일 테두리 테이블 시트 */}
+      <section className="flex-1 min-h-0 bg-[#ffffff] border border-[#cbd5e1] rounded-[10px] overflow-hidden flex flex-col">
+        <div className="px-3.5 py-2.5 border-b border-[#cbd5e1] flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-[14.5px] font-bold text-[#0f172a] whitespace-nowrap">
+              감시 프로세스 목록 및 실시간 제어
+            </h2>
+            <span className="text-[12px] text-[#64748b] whitespace-nowrap">
+              표시 <strong className="text-[#0f172a]">{filtered.length}</strong>개
             </span>
-          ) : undefined
-        }
-        rightAction={
-          <div className="flex items-center gap-1.5">
+            {summary.maintenanceMode && (
+              <span className="px-2 py-0.5 rounded-[5px] bg-[#fef3c7] text-[#b45309] border border-[#fde68a] text-[11px] font-semibold whitespace-nowrap">
+                전체 점검 모드 (자동 복구 일시정지)
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
             <OptionChip
               label="전체"
               count={summary.totalTargets}
@@ -97,7 +103,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               onClick={() => setFilterState('ALL')}
             />
             <OptionChip
-              label="정상"
+              label="정상 가동"
               count={summary.runningCount}
               selected={filterState === 'RUNNING'}
               onClick={() => setFilterState('RUNNING')}
@@ -117,39 +123,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <SearchInput
               value={search}
               onChange={setSearch}
-              placeholder="프로세스 검색..."
-              className="w-[165px]"
+              placeholder="프로그램명 · 프로세스명 검색"
+              className="w-[185px]"
             />
             <PillButton variant="primary" size="sm" onClick={onOpenAddModal}>
               <Plus className="w-3.5 h-3.5" />
-              <span>등록</span>
+              <span>대상 등록</span>
             </PillButton>
           </div>
-        }
-        className="flex-1 min-h-0"
-      >
-        <div className="flex-1 min-h-0 overflow-y-auto border border-[#1e293b] rounded-[8px] bg-[#0b0f19]/60">
-          <table className="w-full text-left border-collapse text-[11.5px]">
-            <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300 z-10">
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <table className="w-full table-fixed text-left border-collapse text-[12.5px]">
+            <thead className="sticky top-0 bg-[#f1f5f9] border-b border-[#cbd5e1] text-[12px] font-semibold text-[#334155] z-10">
               <tr>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">상태</th>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">프로그램명 / 경로</th>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">프로세스 (번호)</th>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">창 타이틀 / 응답</th>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">가동 / 메모리</th>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">재시작 / 타이머</th>
-                <th className="py-2 px-2.5 font-semibold whitespace-nowrap text-right">제어</th>
+                <th className="w-[14%] py-2 px-3 whitespace-nowrap">상태 · 자동감시</th>
+                <th className="w-[23%] py-2 px-3 whitespace-nowrap">프로그램명 · 실행 경로</th>
+                <th className="w-[14%] py-2 px-3 whitespace-nowrap">프로세스 (번호)</th>
+                <th className="w-[15%] py-2 px-3 whitespace-nowrap">창 제목 · 응답</th>
+                <th className="w-[11%] py-2 px-3 whitespace-nowrap">가동 · 메모리</th>
+                <th className="w-[11%] py-2 px-3 whitespace-nowrap">재시작 · 타이머</th>
+                <th className="w-[12%] py-2 px-3 whitespace-nowrap text-right">개별 제어</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1e293b]/70">
+            <tbody className="divide-y divide-[#e2e8f0] bg-[#ffffff]">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-14 text-center text-slate-400">
-                    <p className="text-[13px] font-medium text-slate-200 mb-1">
+                  <td colSpan={7} className="py-16 text-center text-[#64748b]">
+                    <p className="text-[13.5px] font-semibold text-[#0f172a] mb-1">
                       등록된 감시 대상 프로세스가 없습니다.
                     </p>
-                    <p className="text-[11.5px] text-slate-500 mb-3">
-                      우측 상단 [등록] 또는 좌측 사이드바의 [대상추가] 버튼을 눌러 프로세스를 추가하세요.
+                    <p className="text-[12px] text-[#64748b] mb-3.5">
+                      우측 상단 [대상 등록] 또는 좌측 사이드바의 [대상] 메뉴에서 실행 중인 프로그램을 선택해 바로 등록할 수 있습니다.
                     </p>
                     <PillButton variant="primary" size="sm" onClick={onOpenAddModal}>
                       + 감시 프로세스 추가
@@ -173,7 +178,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </tbody>
           </table>
         </div>
-      </UtilityCard>
+      </section>
     </div>
   )
 }

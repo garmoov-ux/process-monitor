@@ -16,6 +16,11 @@
       "time.bora.net",
       "time.kriss.re.kr",
       "pool.ntp.org"
+    ],
+    "ports": [
+      123,
+      123,
+      123
     ]
   },
   "targets": []

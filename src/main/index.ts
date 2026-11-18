@@ -49,14 +49,14 @@ if (!gotSingleInstanceLock) {
     const appIcon = createProcessMonitorAppIcon(64)
 
     mainWindow = new BrowserWindow({
-      width: 960,
-      height: 620,
-      minWidth: 880,
-      minHeight: 560,
+      width: 1040,
+      height: 680,
+      minWidth: 960,
+      minHeight: 620,
       useContentSize: true,
       show: !config.system.startMinimized,
       autoHideMenuBar: true,
-      backgroundColor: '#0b0f19',
+      backgroundColor: '#f1f5f9',
       icon: appIcon,
       title: '프로세스 모니터 - 다중 프로그램 자동 복구 및 시간 동기화',
       webPreferences: {
