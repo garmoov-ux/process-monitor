@@ -22,7 +22,7 @@ export const RunningProcessPickerTab: React.FC<RunningProcessPickerTabProps> = (
   onSelectProcess
 }) => {
   return (
-    <div className="flex-1 min-h-0 flex flex-col px-6 py-4 gap-3">
+    <div className="flex-1 min-h-0 flex flex-col px-4 py-3 gap-2.5">
       <div className="flex items-center justify-between gap-2">
         <SearchInput
           value={searchQuery}
@@ -31,43 +31,43 @@ export const RunningProcessPickerTab: React.FC<RunningProcessPickerTabProps> = (
           className="flex-1"
         />
         <PillButton variant="pearl-capsule" size="sm" onClick={onRefresh}>
-          <RefreshCw className={`w-3.5 h-3.5 ${scanning ? 'animate-spin' : ''}`} />
-          <span>목록 새로고침</span>
+          <RefreshCw className={`w-3 h-3 text-[#38bdf8] ${scanning ? 'animate-spin' : ''}`} />
+          <span>새로고침</span>
         </PillButton>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto border border-[#e0e0e0] rounded-[12px]">
-        <table className="w-full text-left border-collapse text-[12px]">
-          <thead className="sticky top-0 bg-[#f5f5f7] border-b border-[#e0e0e0]">
+      <div className="flex-1 min-h-0 overflow-y-auto border border-[#1e293b] rounded-[8px] bg-[#0b0f19]">
+        <table className="w-full text-left border-collapse text-[11.5px]">
+          <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300">
             <tr>
-              <th className="py-2 px-3 font-semibold whitespace-nowrap">프로세스명 (번호)</th>
-              <th className="py-2 px-3 font-semibold whitespace-nowrap">창 타이틀</th>
-              <th className="py-2 px-3 font-semibold whitespace-nowrap">실행 파일 경로</th>
-              <th className="py-2 px-3 font-semibold whitespace-nowrap text-right">선택</th>
+              <th className="py-1.5 px-2.5 font-semibold whitespace-nowrap">프로세스명 (번호)</th>
+              <th className="py-1.5 px-2.5 font-semibold whitespace-nowrap">창 타이틀</th>
+              <th className="py-1.5 px-2.5 font-semibold whitespace-nowrap">실행 파일 경로</th>
+              <th className="py-1.5 px-2.5 font-semibold whitespace-nowrap text-right">선택</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e0e0e0]">
+          <tbody className="divide-y divide-[#1e293b]/70">
             {runningList.map((proc) => (
-              <tr key={proc.pid} className="hover:bg-[#fafafc]">
-                <td className="py-2 px-3 whitespace-nowrap font-medium text-[#1d1d1f]">
-                  {proc.processName} <span className="text-[#7a7a7a]">({proc.pid})</span>
+              <tr key={proc.pid} className="hover:bg-[#1e293b]/40">
+                <td className="py-1.5 px-2.5 whitespace-nowrap font-medium text-slate-200">
+                  {proc.processName} <span className="text-slate-500">({proc.pid})</span>
                 </td>
-                <td className="py-2 px-3 max-w-[200px] truncate text-[#1d1d1f]">
+                <td className="py-1.5 px-2.5 max-w-[180px] truncate text-slate-300">
                   {proc.windowTitle || '-'}
                 </td>
                 <td
-                  className="py-2 px-3 max-w-[280px] truncate text-[#7a7a7a]"
+                  className="py-1.5 px-2.5 max-w-[260px] truncate text-slate-400"
                   title={proc.execPath}
                 >
                   {proc.execPath || '권한 제한 또는 시스템 프로세스'}
                 </td>
-                <td className="py-2 px-3 text-right whitespace-nowrap">
+                <td className="py-1.5 px-2.5 text-right whitespace-nowrap">
                   <PillButton
                     variant="primary"
                     size="sm"
                     onClick={() => onSelectProcess(proc)}
                   >
-                    불러오기
+                    선택
                   </PillButton>
                 </td>
               </tr>

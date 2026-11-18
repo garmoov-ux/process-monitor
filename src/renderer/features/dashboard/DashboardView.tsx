@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { Plus } from 'lucide-react'
 import {
   DashboardSummary,
   ProcessRuntimeStatus,
@@ -71,7 +72,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [processes, filterState, search])
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-4">
+    <div className="flex-1 min-h-0 flex flex-col gap-2.5">
       <DashboardHeroTile
         summary={summary}
         onOpenAddModal={onOpenAddModal}
@@ -79,9 +80,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       />
 
       <UtilityCard
-        title="등록 프로세스 실시간 상태 및 개별 제어"
+        title="감시 프로세스 목록"
+        badge={
+          summary.maintenanceMode ? (
+            <span className="px-2 py-0.5 rounded-[5px] bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10.5px] font-medium">
+              전체 점검 모드 (자동 복구 일시정지)
+            </span>
+          ) : undefined
+        }
         rightAction={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <OptionChip
               label="전체"
               count={summary.totalTargets}
@@ -89,7 +97,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               onClick={() => setFilterState('ALL')}
             />
             <OptionChip
-              label="정상 가동"
+              label="정상"
               count={summary.runningCount}
               selected={filterState === 'RUNNING'}
               onClick={() => setFilterState('RUNNING')}
@@ -106,47 +114,45 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               selected={filterState === 'ISSUE'}
               onClick={() => setFilterState('ISSUE')}
             />
-            <OptionChip
-              label="일시정지"
-              count={summary.pausedCount}
-              selected={filterState === 'PAUSED'}
-              onClick={() => setFilterState('PAUSED')}
-            />
             <SearchInput
               value={search}
               onChange={setSearch}
-              placeholder="프로그램명, 프로세스명, 창 타이틀 검색..."
-              className="w-[250px]"
+              placeholder="프로세스 검색..."
+              className="w-[165px]"
             />
+            <PillButton variant="primary" size="sm" onClick={onOpenAddModal}>
+              <Plus className="w-3.5 h-3.5" />
+              <span>등록</span>
+            </PillButton>
           </div>
         }
         className="flex-1 min-h-0"
       >
-        <div className="flex-1 min-h-0 overflow-y-auto border border-[#e0e0e0] rounded-[14px]">
-          <table className="w-full text-left border-collapse text-[12.5px]">
-            <thead className="sticky top-0 bg-[#f5f5f7] border-b border-[#e0e0e0] text-[#1d1d1f] z-10">
+        <div className="flex-1 min-h-0 overflow-y-auto border border-[#1e293b] rounded-[8px] bg-[#0b0f19]/60">
+          <table className="w-full text-left border-collapse text-[11.5px]">
+            <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300 z-10">
               <tr>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap">감시 상태</th>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap">프로그램명 / 실행 경로</th>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap">프로세스명 (번호)</th>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap">창 타이틀 / 응답 상태</th>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap">가동 시간 / 메모리</th>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap">타이머 / 재시작 횟수</th>
-                <th className="py-2.5 px-3.5 font-semibold whitespace-nowrap text-right">개별 제어</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">상태</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">프로그램명 / 경로</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">프로세스 (번호)</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">창 타이틀 / 응답</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">가동 / 메모리</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap">재시작 / 타이머</th>
+                <th className="py-2 px-2.5 font-semibold whitespace-nowrap text-right">제어</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#e0e0e0]">
+            <tbody className="divide-y divide-[#1e293b]/70">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-[#7a7a7a]">
-                    <p className="text-[14px] font-medium text-[#1d1d1f] mb-1">
-                      표시할 감시 대상 프로세스가 없습니다.
+                  <td colSpan={7} className="py-14 text-center text-slate-400">
+                    <p className="text-[13px] font-medium text-slate-200 mb-1">
+                      등록된 감시 대상 프로세스가 없습니다.
                     </p>
-                    <p className="text-[12.5px] mb-4">
-                      우측 상단의 [+ 감시 대상 프로그램 추가] 버튼을 눌러 실행 중인 프로그램을 선택하거나 실행 파일을 등록하세요.
+                    <p className="text-[11.5px] text-slate-500 mb-3">
+                      우측 상단 [등록] 또는 좌측 사이드바의 [대상추가] 버튼을 눌러 프로세스를 추가하세요.
                     </p>
                     <PillButton variant="primary" size="sm" onClick={onOpenAddModal}>
-                      + 첫 감시 프로세스 등록하기
+                      + 감시 프로세스 추가
                     </PillButton>
                   </td>
                 </tr>

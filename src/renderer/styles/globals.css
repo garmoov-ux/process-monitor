@@ -1,83 +1,66 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "Pretendard";
+  font-family: 'Pretendard';
+  src: url('../assets/fonts/Pretendard-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url("../assets/fonts/Pretendard-Regular.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Pretendard";
+  font-family: 'Pretendard';
+  src: url('../assets/fonts/Pretendard-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
-  src: url("../assets/fonts/Pretendard-Medium.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Pretendard";
+  font-family: 'Pretendard';
+  src: url('../assets/fonts/Pretendard-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
-  src: url("../assets/fonts/Pretendard-SemiBold.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Pretendard";
+  font-family: 'Pretendard';
+  src: url('../assets/fonts/Pretendard-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-  src: url("../assets/fonts/Pretendard-Bold.woff2") format("woff2");
 }
 
-@layer base {
-  :root {
-    --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", system-ui, sans-serif;
-    --font-mono: "Pretendard", ui-monospace, SFMono-Regular, Consolas, monospace;
-    --color-primary: #2563eb;
-    --color-primary-focus: #3b82f6;
-    --color-primary-on-dark: #38bdf8;
-    --color-canvas: #ffffff;
-    --color-canvas-parchment: #f1f5f9;
-    --color-surface-pearl: #f8fafc;
-    --color-surface-tile-1: #0f172a;
-    --color-surface-tile-2: #1e293b;
-    --color-surface-tile-3: #334155;
-    --color-surface-black: #090d16;
-    --color-ink: #0f172a;
-    --color-ink-muted-80: #334155;
-    --color-ink-muted-48: #64748b;
-    --color-hairline: #cbd5e1;
-  }
-
-  body,
-  button,
-  input,
-  select,
-  textarea {
-    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", system-ui,
-      sans-serif;
-    font-size: 13.5px;
-    line-height: 1.45;
-    letter-spacing: -0.015em;
-    color: #0f172a;
-    font-variant-numeric: tabular-nums;
-  }
-
-  body {
-    background-color: #f1f5f9;
-    margin: 0;
-  }
+:root {
+  color-scheme: dark;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-.apple-frosted-subnav {
-  background-color: rgba(241, 245, 249, 0.88);
-  backdrop-filter: saturate(180%) blur(16px);
-  -webkit-backdrop-filter: saturate(180%) blur(16px);
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0b0f19;
+  color: #f1f5f9;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.apple-product-shadow {
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.35);
+/* 미니멀 다크 스크롤바 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

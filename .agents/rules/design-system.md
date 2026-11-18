@@ -2,33 +2,26 @@
 trigger: always_on
 ---
 
-# UI/UX 디자인 시스템 규칙 (DESIGN.md 준수)
+# UI/UX 디자인 시스템 규칙 (미니멀 다크 테마 & 아이콘 사이드바)
 
-프론트엔드(`src/renderer/`)의 모든 화면과 컴포넌트는 프로젝트 루트의 `DESIGN.md`에 정의된 디자인 철학과 토큰을 엄격히 준수한다.
+프론트엔드(`src/renderer/`)의 모든 화면과 컴포넌트는 콤팩트한 미니멀 다크 관제 테마 규격을 엄격히 준수한다.
 
-## 1. 데스크톱 고정 뷰포트 및 한글화 원칙
-- **전체 페이지 스크롤 금지**: 최상위 레이아웃은 `h-screen overflow-hidden flex flex-col select-none`으로 고정하며, 테이블/목록 영역만 내부 스크롤(`flex-1 min-h-0 overflow-y-auto`)한다.
-- **100% 자연스러운 한글 UI**: `SQLite`, `PID`, `Hung`, `Circuit Breaker`, `Offset`, `Timeout` 등 영문 개발 용어를 화면에 직접 노출하지 않고 `내장 데이터베이스`, `프로세스 번호`, `응답 없음`, `연속 실패 차단`, `시간 오차`, `대기 시간` 등 자연스러운 한글 표현을 사용한다.
-- **줄바꿈 깨짐 방지**: 버튼, 탭, 상태 배지, 테이블 헤더, 설정 항목 제목에는 `whitespace-nowrap`을 적용해 어색한 두 줄 개행이 발생하지 않도록 한다.
-- **오프라인 내장 폰트**: `src/renderer/assets/fonts/Pretendard-*.woff2` (`400`, `500`, `600`, `700`)를 번들링하여 어떤 Windows PC에서도 일관된 타이포그래피를 제공한다.
+## 1. 콤팩트 고정 뷰포트 및 좌측 아이콘 사이드바 레이아웃
+- **창 크기**: `atoj`(`1040x680`), `systemcheck`(`1180x720`)보다 콤팩트한 **`960 x 620`** (`useContentSize: true`)을 기본 창 크기로 사용한다.
+- **전체 페이지 스크롤 금지**: 최상위 레이아웃은 `h-screen w-screen overflow-hidden flex bg-[#0b0f19] text-slate-100 select-none`으로 고정하며, 내부 테이블/로그 영역만 독립 스크롤(`flex-1 min-h-0 overflow-y-auto`)한다.
+- **좌측 슬림 아이콘 사이드바 (`GlobalNav.tsx`, `w-[60px]`)**:
+  - 상단: `PMon` 브랜드 배지 + 실시간 감시 상태 표시등(초록 펄스: 감시 중 / 황색: 점검 모드)
+  - 중앙: `16px` 아이콘 + `10px` 2글자 한글 레이블(`현황`, `이력`, `통계`, `로그`, `설정`, `정보`)
+  - 하단: `대상추가`, `감시중/점검모드` 토글, `시간동기` 퀵 액션 아이콘 버튼 배치
+- **100% 자연스러운 한글 UI 및 줄바꿈 방지**: 버튼, 탭, 상태 배지, 테이블 헤더에는 `whitespace-nowrap`을 적용하고 순수 한글 레이블을 사용한다.
+- **오프라인 내장 폰트**: `src/renderer/assets/fonts/Pretendard-*.woff2` (`400`, `500`, `600`, `700`)를 번들링한다.
 
-## 2. 컬러 시스템 (Colors)
-- **단일 브랜드 액센트 (Single Accent)**:
-  - Action Blue (`#0066cc`): 모든 주요 버튼(Primary Pill CTA), 활성 탭, 활성 세그먼트에 사용하는 유일한 브랜드 컬러
-  - Focus Blue (`#0071e3`): 키보드 포커스 링 (`outline: 2px solid #0071e3`)
-  - Sky Link Blue (`#2997ff`): 다크 타일(`#272729`) 위에서만 사용하는 텍스트/수치 강조 블루
-- **배경 및 표면 (Surfaces)**:
-  - Pure White (`#ffffff`): 기본 유틸리티 카드, 테이블 컨테이너, 입력창 배경
-  - Parchment (`#f5f5f7`): 앱 기본 캔버스 배경
-  - Pearl Button (`#fafafc`): 보조 버튼 배경
-  - Near-Black Tile (`#272729` / `#2a2a2c` / `#252527`): 상단 다크 요약 히어로 타일 배경
-  - Pure Black (`#000000`): 최상단 슬림 글로벌 네비게이션 바(`height: 44px`)
-- **텍스트 및 보더 (Text & Hairlines)**:
-  - Near-Black Ink (`#1d1d1f`): 기본 헤드라인 및 본문 텍스트
-  - Muted Text (`#7a7a7a` / 다크 위 `#cccccc`): 캡션, 타임스탬프, 부가 설명
-  - Hairline Border (`#e0e0e0`): 유틸리티 카드의 1px 실선 테두리
-
-## 3. 형태 및 인터랙션 (Shapes & Micro-interactions)
-- 배경이나 버튼에 장식용 CSS 그라데이션이나 불필요한 그림자를 사용하지 않는다.
-- 유틸리티 카드 라디우스는 `18px`(`rounded-[18px]`), 주요 액션 버튼과 검색창은 `rounded-full`, 설정 선택기는 애플 시스템 환경설정 스타일의 세그먼트 컨트롤(`bg-[#e8e8ed] rounded-[10px]`)을 사용한다.
-- 모든 버튼은 클릭/활성 상태(Active)에서 `active:scale-95 transition-transform duration-150`을 적용한다.
+## 2. 다크 컬러 시스템 (Dark Palette)
+- **사이드바 및 푸터 표면 (`#090d16`)**: 가장 깊은 다크 네이비-블랙 배경 + `#1e293b` 1px 보더
+- **메인 캔버스 배경 (`#0b0f19`)**: 눈의 피로를 줄이는 다크 슬레이트 배경
+- **유틸리티 카드 및 헤더 표면 (`#111827`)**: `border border-[#1e293b] rounded-[10px] p-3`
+- **강조 및 상태 액센트**:
+  - Primary Blue (`#2563eb`): 활성 사이드바 탭, 주요 액션 버튼
+  - Sky Cyan (`#38bdf8`): 주요 수치, 시간 동기화 오차, 포커스 보더
+  - Emerald (`#34d399`): 정상 가동 배지 및 가동률 강조
+  - Amber / Rose (`#fbbf24` / `#fb7185`): 구동 유예/대기 및 응답 없음/차단 경고

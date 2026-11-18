@@ -34,10 +34,8 @@ export const App: React.FC = () => {
 
   if (loading || !snapshot) {
     return (
-      <div className="h-screen w-screen overflow-hidden bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] select-none">
-        <div className="text-center">
-          <p className="text-[15px] font-semibold">ProcessMonitor 관제 엔진을 불러오는 중입니다...</p>
-        </div>
+      <div className="h-screen w-screen overflow-hidden bg-[#0b0f19] flex items-center justify-center text-slate-300 select-none">
+        <p className="text-[13px] font-medium">ProcessMonitor 엔진 초기화 중...</p>
       </div>
     )
   }
@@ -67,82 +65,86 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#f5f5f7] text-[#1d1d1f] select-none">
+    <div className="h-screen w-screen overflow-hidden flex bg-[#0b0f19] text-slate-100 select-none">
+      {/* 좌측 슬림 아이콘 사이드바 */}
       <GlobalNav
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         summary={snapshot.summary}
         onToggleMaintenance={(next) => void toggleMaintenanceMode(next)}
         onOpenAddModal={handleOpenAdd}
-      />
-
-      {toastMessage && (
-        <div className="fixed bottom-12 right-6 z-50 px-4 py-2.5 rounded-full bg-[#272729] text-white text-[12.5px] font-medium border border-[#3a3a3c]">
-          {toastMessage}
-        </div>
-      )}
-
-      <main className="flex-1 min-h-0 p-5 flex flex-col overflow-hidden">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            summary={snapshot.summary}
-            processes={snapshot.processes}
-            onOpenAddModal={handleOpenAdd}
-            onEditTarget={handleOpenEdit}
-            onDeleteTarget={(id) => void deleteTarget(id)}
-            onToggleTargetEnabled={(id, enabled) => void toggleTargetEnabled(id, enabled)}
-            onControlTarget={(id, cmd) => void controlTarget(id, cmd)}
-            onResetCircuit={(id) => void resetCircuitBreaker(id)}
-            onSyncNtpNow={() => void syncNtpNow()}
-            onOpenExeLocation={(execPath) => handleOpenFolder(execPath)}
-          />
-        )}
-
-        {activeTab === 'history' && (
-          <HistoryView
-            targets={snapshot.config.targets}
-            events={snapshot.recentEvents}
-            ntpHistory={snapshot.recentNtpHistory}
-            onExportCsv={() => void handleExportCsv()}
-            onExportPdf={() => void handleExportPdf()}
-          />
-        )}
-
-        {activeTab === 'logs' && (
-          <RealtimeLogsView
-            events={snapshot.recentEvents}
-            onOpenLogFolder={() => handleOpenFolder('LOGS')}
-          />
-        )}
-
-        {activeTab === 'stats' && (
-          <MonthlyStatsView
-            summary={snapshot.summary}
-            processes={snapshot.processes}
-            dailyStats={snapshot.dailyStats}
-          />
-        )}
-
-        {activeTab === 'settings' && (
-          <SettingsView
-            config={snapshot.config}
-            summary={snapshot.summary}
-            onSaveConfig={updateConfig}
-            onSyncNtpNow={async () => {
-              await syncNtpNow()
-            }}
-          />
-        )}
-
-        {activeTab === 'about' && <ProgramInfoView />}
-      </main>
-
-      <StatusFooter
-        config={snapshot.config}
-        summary={snapshot.summary}
         onSyncNtpNow={() => void syncNtpNow()}
-        onOpenFolder={handleOpenFolder}
       />
+
+      {/* 우측 메인 콘텐츠 + 하단 슬림 상태바 */}
+      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+        {toastMessage && (
+          <div className="fixed bottom-9 right-4 z-50 px-3.5 py-1.5 rounded-[7px] bg-[#1e293b] text-slate-100 text-[11.5px] font-medium border border-[#38bdf8]/40 shadow-lg">
+            {toastMessage}
+          </div>
+        )}
+
+        <main className="flex-1 min-h-0 p-3 flex flex-col overflow-hidden">
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              summary={snapshot.summary}
+              processes={snapshot.processes}
+              onOpenAddModal={handleOpenAdd}
+              onEditTarget={handleOpenEdit}
+              onDeleteTarget={(id) => void deleteTarget(id)}
+              onToggleTargetEnabled={(id, enabled) => void toggleTargetEnabled(id, enabled)}
+              onControlTarget={(id, cmd) => void controlTarget(id, cmd)}
+              onResetCircuit={(id) => void resetCircuitBreaker(id)}
+              onSyncNtpNow={() => void syncNtpNow()}
+              onOpenExeLocation={(execPath) => handleOpenFolder(execPath)}
+            />
+          )}
+
+          {activeTab === 'history' && (
+            <HistoryView
+              targets={snapshot.config.targets}
+              events={snapshot.recentEvents}
+              ntpHistory={snapshot.recentNtpHistory}
+              onExportCsv={() => void handleExportCsv()}
+              onExportPdf={() => void handleExportPdf()}
+            />
+          )}
+
+          {activeTab === 'logs' && (
+            <RealtimeLogsView
+              events={snapshot.recentEvents}
+              onOpenLogFolder={() => handleOpenFolder('LOGS')}
+            />
+          )}
+
+          {activeTab === 'stats' && (
+            <MonthlyStatsView
+              summary={snapshot.summary}
+              processes={snapshot.processes}
+              dailyStats={snapshot.dailyStats}
+            />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsView
+              config={snapshot.config}
+              summary={snapshot.summary}
+              onSaveConfig={updateConfig}
+              onSyncNtpNow={async () => {
+                await syncNtpNow()
+              }}
+            />
+          )}
+
+          {activeTab === 'about' && <ProgramInfoView />}
+        </main>
+
+        <StatusFooter
+          config={snapshot.config}
+          summary={snapshot.summary}
+          onOpenFolder={handleOpenFolder}
+        />
+      </div>
 
       <TargetModal
         open={modalOpen}

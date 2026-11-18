@@ -46,15 +46,17 @@ if (!gotSingleInstanceLock) {
       () => mainWindow
     )
 
+    // atoj(1040x680), systemcheck(1180x720)보다 더 콤팩트하고 미니멀한 960x620 다크 관제 창
     mainWindow = new BrowserWindow({
-      width: 1380,
-      height: 860,
-      minWidth: 1180,
-      minHeight: 740,
+      width: 960,
+      height: 620,
+      minWidth: 880,
+      minHeight: 560,
+      useContentSize: true,
       show: !config.system.startMinimized,
       autoHideMenuBar: true,
-      backgroundColor: '#f5f5f7',
-      title: 'ProcessMonitor - 다중 프로세스 모니터링 및 자동 복구 시스템',
+      backgroundColor: '#0b0f19',
+      title: 'ProcessMonitor - 프로세스 자동 복구 및 시간 동기화',
       webPreferences: {
         preload: path.join(__dirname, '../preload/index.js'),
         contextIsolation: true,

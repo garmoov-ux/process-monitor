@@ -11,18 +11,18 @@ interface SearchInputProps {
 export const SearchInput: React.FC<SearchInputProps> = ({
   value,
   onChange,
-  placeholder = '검색어를 입력하세요...',
+  placeholder = '검색...',
   className = ''
 }) => {
   return (
     <div className={`relative flex items-center ${className}`}>
-      <Search className="w-3.5 h-3.5 text-[#7a7a7a] absolute left-3.5 pointer-events-none" />
+      <Search className="w-3 h-3 text-slate-400 absolute left-2.5 pointer-events-none" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-[32px] pl-9 pr-3.5 rounded-full bg-[#ffffff] text-[#1d1d1f] text-[12.5px] border border-[#e0e0e0] focus:outline-2 focus:outline-[#0071e3] placeholder:text-[#7a7a7a]"
+        className="w-full h-[26px] pl-7 pr-2.5 rounded-[6px] bg-[#0f172a] text-slate-100 text-[11.5px] border border-[#334155] focus:border-[#38bdf8] focus:outline-none placeholder:text-slate-500"
       />
     </div>
   )

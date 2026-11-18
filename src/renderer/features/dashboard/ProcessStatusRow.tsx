@@ -30,43 +30,43 @@ function getStateBadgeMeta(state: ProcessTargetState): { label: string; classNam
     case 'RUNNING':
       return {
         label: '정상 가동',
-        className: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+        className: 'bg-emerald-500/15 text-[#34d399] border border-emerald-500/30'
       }
     case 'STARTUP_GRACE':
       return {
-        label: '구동 유예 중',
-        className: 'bg-blue-50 text-[#0066cc] border border-blue-200'
+        label: '구동 유예',
+        className: 'bg-sky-500/15 text-[#38bdf8] border border-sky-500/30'
       }
     case 'RESTART_PENDING':
       return {
         label: '재시작 대기',
-        className: 'bg-amber-50 text-amber-700 border border-amber-200'
+        className: 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
       }
     case 'HUNG_DETECTED':
       return {
-        label: '응답 없음 감지',
-        className: 'bg-rose-50 text-rose-700 border border-rose-200'
+        label: '응답 없음',
+        className: 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
       }
     case 'STOPPING':
       return {
-        label: '종료 처리 중',
-        className: 'bg-slate-100 text-slate-700 border border-slate-300'
+        label: '종료 대기',
+        className: 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
       }
     case 'CIRCUIT_OPEN':
       return {
-        label: '연속 실패 차단',
-        className: 'bg-rose-100 text-rose-800 border border-rose-300'
+        label: '연속실패 차단',
+        className: 'bg-rose-500/25 text-rose-200 border border-rose-500/40'
       }
     case 'INVALID_PATH':
       return {
         label: '경로 오류',
-        className: 'bg-rose-50 text-rose-700 border border-rose-200'
+        className: 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
       }
     case 'PAUSED':
     default:
       return {
-        label: '감시 일시정지',
-        className: 'bg-[#f5f5f7] text-[#7a7a7a] border border-[#e0e0e0]'
+        label: '일시정지',
+        className: 'bg-slate-800 text-slate-400 border border-slate-700'
       }
   }
 }
@@ -76,7 +76,7 @@ function formatDuration(sec: number): string {
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
   const s = sec % 60
-  if (h > 0) return `${h}시간 ${m}분 ${s}초`
+  if (h > 0) return `${h}시간 ${m}분`
   if (m > 0) return `${m}분 ${s}초`
   return `${s}초`
 }
@@ -94,70 +94,67 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
   const memMb = item.memoryKb > 0 ? `${(item.memoryKb / 1024).toFixed(1)} MB` : '-'
 
   return (
-    <tr className="hover:bg-[#fafafc]">
-      <td className="py-3 px-3.5 align-middle whitespace-nowrap">
+    <tr className="hover:bg-[#1e293b]/40">
+      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
         <div className="flex flex-col items-start gap-1">
           <span
-            className={`px-2.5 py-0.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap ${badge.className}`}
+            className={`px-2 py-0.5 rounded-[5px] text-[10.5px] font-semibold whitespace-nowrap ${badge.className}`}
           >
             {badge.label}
           </span>
-          <label className="inline-flex items-center gap-1.5 text-[11px] text-[#7a7a7a] cursor-pointer">
+          <label className="inline-flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer">
             <input
               type="checkbox"
               checked={item.target.enabled}
               onChange={(e) => onToggleTargetEnabled(item.target.id, e.target.checked)}
-              className="accent-[#0066cc] cursor-pointer"
+              className="accent-[#2563eb] cursor-pointer w-3 h-3"
             />
-            <span>{item.target.enabled ? '자동 감시 켜짐' : '자동 감시 꺼짐'}</span>
+            <span>{item.target.enabled ? '감시켜짐' : '감시꺼짐'}</span>
           </label>
         </div>
       </td>
 
-      <td className="py-3 px-3.5 align-middle max-w-[290px]">
-        <div className="font-semibold text-[#1d1d1f] truncate">{item.target.name}</div>
-        <div className="text-[11.5px] text-[#7a7a7a] truncate mt-0.5" title={item.target.execPath}>
+      <td className="py-2 px-2.5 align-middle max-w-[210px]">
+        <div className="font-semibold text-slate-100 truncate">{item.target.name}</div>
+        <div className="text-[10.5px] text-slate-400 truncate" title={item.target.execPath}>
           {item.target.execPath}
         </div>
-        {item.target.args && (
-          <div className="text-[11px] text-[#0066cc] truncate">인자: {item.target.args}</div>
-        )}
       </td>
 
-      <td className="py-3 px-3.5 align-middle whitespace-nowrap">
-        <div className="font-medium text-[#1d1d1f]">
+      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
+        <div className="font-medium text-slate-200">
           {item.target.watchProcessName || item.target.processName}
         </div>
-        <div className="text-[11.5px] text-[#7a7a7a]">프로세스 번호: {item.pid ?? '미실행'}</div>
+        <div className="text-[10.5px] text-slate-400">번호: {item.pid ?? '미실행'}</div>
       </td>
 
-      <td className="py-3 px-3.5 align-middle max-w-[210px]">
-        <div className="text-[#1d1d1f] truncate">{item.detectedWindowTitle || '창 타이틀 없음'}</div>
-        <div className="text-[11.5px] text-[#7a7a7a] whitespace-nowrap">
+      <td className="py-2 px-2.5 align-middle max-w-[160px]">
+        <div className="text-slate-200 truncate">{item.detectedWindowTitle || '-'}</div>
+        <div className="text-[10.5px] text-slate-400 truncate">
           {item.pid
             ? item.responding
-              ? '응답 상태: 양호'
-              : `응답 없음 (${item.consecutiveHungCount}/${item.target.hungThresholdCount}회)`
+              ? '응답 양호'
+              : `응답 없음 (${item.consecutiveHungCount}/${item.target.hungThresholdCount})`
             : item.lastMessage}
         </div>
       </td>
 
-      <td className="py-3 px-3.5 align-middle whitespace-nowrap">
-        <div className="text-[#1d1d1f] font-medium">{formatDuration(item.uptimeSec)}</div>
-        <div className="text-[11.5px] text-[#7a7a7a]">메모리: {memMb}</div>
+      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
+        <div className="text-slate-200 font-medium">{formatDuration(item.uptimeSec)}</div>
+        <div className="text-[10.5px] text-slate-400">{memMb}</div>
       </td>
 
-      <td className="py-3 px-3.5 align-middle whitespace-nowrap">
-        <div className="text-[#1d1d1f] font-medium">누적 재시작: {item.totalRestartCount}회</div>
-        <div className="text-[11.5px] text-[#0066cc]">
+      <td className="py-2 px-2.5 align-middle whitespace-nowrap">
+        <div className="text-slate-200 font-medium">재시작 {item.totalRestartCount}회</div>
+        <div className="text-[10.5px] text-[#38bdf8]">
           {item.countdownSec > 0
-            ? `대기 카운트다운: ${item.countdownSec}초`
+            ? `카운트: ${item.countdownSec}초`
             : `유예 ${item.target.startupGraceSec}초 / 대기 ${item.target.restartDelaySec}초`}
         </div>
       </td>
 
-      <td className="py-3 px-3.5 align-middle whitespace-nowrap text-right">
-        <div className="inline-flex items-center justify-end gap-1.5">
+      <td className="py-2 px-2.5 align-middle whitespace-nowrap text-right">
+        <div className="inline-flex items-center justify-end gap-1">
           {item.state === 'CIRCUIT_OPEN' && (
             <PillButton
               variant="primary"
@@ -165,8 +162,8 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
               onClick={() => onResetCircuit(item.target.id)}
               title="연속 실패 차단 해제"
             >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>차단 해제</span>
+              <ShieldAlert className="w-3 h-3" />
+              <span>해제</span>
             </PillButton>
           )}
 
@@ -175,20 +172,18 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
             size="sm"
             onClick={() => onControlTarget(item.target.id, 'START')}
             disabled={Boolean(item.pid)}
-            title="수동 실행"
+            title="수동 시작"
           >
-            <Play className="w-3.5 h-3.5 text-[#0066cc]" />
-            <span>시작</span>
+            <Play className="w-3 h-3 text-[#34d399]" />
           </PillButton>
 
           <PillButton
             variant="pearl-capsule"
             size="sm"
             onClick={() => onControlTarget(item.target.id, 'RESTART')}
-            title="단계별 종료 후 재실행"
+            title="단계별 종료 후 재시작"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-[#0066cc]" />
-            <span>재시작</span>
+            <RotateCcw className="w-3 h-3 text-[#38bdf8]" />
           </PillButton>
 
           <PillButton
@@ -198,17 +193,16 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
             disabled={!item.pid}
             title="정상 종료 유도 (미종료 시 강제 종료)"
           >
-            <Square className="w-3.5 h-3.5 text-rose-600" />
-            <span>종료</span>
+            <Square className="w-3 h-3 text-rose-400" />
           </PillButton>
 
           <PillButton
             variant="pearl-capsule"
             size="sm"
             onClick={() => onOpenExeLocation(item.target.execPath)}
-            title="실행 파일 위치 열기"
+            title="실행 파일 폴더 열기"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-[#7a7a7a]" />
+            <FolderOpen className="w-3 h-3 text-slate-400" />
           </PillButton>
 
           <PillButton
@@ -217,7 +211,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
             onClick={() => onEditTarget(item.target)}
             title="설정 편집"
           >
-            <Edit3 className="w-3.5 h-3.5 text-[#1d1d1f]" />
+            <Edit3 className="w-3 h-3 text-slate-200" />
           </PillButton>
 
           <PillButton
@@ -226,7 +220,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
             onClick={() => onDeleteTarget(item.target.id)}
             title="목록에서 삭제"
           >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <Trash2 className="w-3 h-3 text-rose-400" />
           </PillButton>
         </div>
       </td>

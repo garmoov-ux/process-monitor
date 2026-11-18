@@ -158,36 +158,36 @@ export const TargetModal: React.FC<TargetModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-6">
-      <div className="bg-[#ffffff] border border-[#e0e0e0] rounded-[18px] w-full max-w-[820px] max-h-[86vh] flex flex-col overflow-hidden">
-        <header className="px-6 py-4 border-b border-[#e0e0e0] flex items-center justify-between bg-[#f5f5f7]">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[2px] flex items-center justify-center p-4">
+      <div className="bg-[#111827] border border-[#1e293b] rounded-[12px] w-full max-w-[740px] max-h-[90vh] flex flex-col overflow-hidden text-slate-100">
+        <header className="px-4 py-3 border-b border-[#1e293b] flex items-center justify-between bg-[#090d16]">
           <div>
-            <h3 className="text-[16px] font-semibold text-[#1d1d1f]">
-              {initialTarget ? '감시 대상 프로세스 설정 편집' : '새 감시 대상 프로세스 등록'}
+            <h3 className="text-[14px] font-semibold text-slate-100">
+              {initialTarget ? '감시 프로세스 설정 편집' : '새 감시 대상 프로세스 등록'}
             </h3>
-            <p className="text-[12px] text-[#7a7a7a]">
+            <p className="text-[11px] text-slate-400">
               실행 중인 윈도우/프로세스를 선택하거나 직접 실행 파일(.exe) 경로와 개별 타이머를 지정합니다.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-[#ffffff] border border-[#e0e0e0] flex items-center justify-center cursor-pointer"
+            className="w-7 h-7 rounded-[6px] bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] flex items-center justify-center cursor-pointer"
           >
-            <X className="w-4 h-4 text-[#1d1d1f]" />
+            <X className="w-3.5 h-3.5 text-slate-300" />
           </button>
         </header>
 
-        <div className="px-6 pt-4 shrink-0">
-          <div className="inline-flex p-1 rounded-[10px] bg-[#e8e8ed]">
+        <div className="px-4 pt-3 shrink-0">
+          <div className="inline-flex p-0.5 rounded-[8px] bg-[#090d16] border border-[#1e293b]">
             <button
               type="button"
               onClick={() => {
                 setModeTab('RUNNING')
                 if (runningList.length === 0) void refreshRunningList()
               }}
-              className={`h-[30px] px-4 rounded-[8px] text-[12.5px] font-medium whitespace-nowrap cursor-pointer ${
-                modeTab === 'RUNNING' ? 'bg-[#0066cc] text-white' : 'text-[#1d1d1f]'
+              className={`h-[26px] px-3 rounded-[6px] text-[11.5px] font-medium whitespace-nowrap cursor-pointer ${
+                modeTab === 'RUNNING' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               1. 실행 중인 프로세스 선택
@@ -195,11 +195,11 @@ export const TargetModal: React.FC<TargetModalProps> = ({
             <button
               type="button"
               onClick={() => setModeTab('MANUAL')}
-              className={`h-[30px] px-4 rounded-[8px] text-[12.5px] font-medium whitespace-nowrap cursor-pointer ${
-                modeTab === 'MANUAL' ? 'bg-[#0066cc] text-white' : 'text-[#1d1d1f]'
+              className={`h-[26px] px-3 rounded-[6px] text-[11.5px] font-medium whitespace-nowrap cursor-pointer ${
+                modeTab === 'MANUAL' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              2. 수동 파일 지정 및 타이머 상세 설정
+              2. 수동 파일 지정 및 타이머 설정
             </button>
           </div>
         </div>
