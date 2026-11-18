@@ -133,17 +133,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <table className="w-full table-fixed text-left border-collapse text-[12.5px]">
+        <div className="flex-1 min-h-0 overflow-auto">
+          <table className="w-full min-w-[920px] table-fixed text-left border-collapse text-[12.5px]">
             <thead className="sticky top-0 bg-[#f1f5f9] border-b border-[#cbd5e1] text-[12px] font-semibold text-[#334155] z-10">
               <tr>
-                <th className="w-[14%] py-2 px-3 whitespace-nowrap">상태 · 자동감시</th>
-                <th className="w-[23%] py-2 px-3 whitespace-nowrap">프로그램명 · 실행 경로</th>
-                <th className="w-[14%] py-2 px-3 whitespace-nowrap">프로세스 (번호)</th>
-                <th className="w-[15%] py-2 px-3 whitespace-nowrap">창 제목 · 응답</th>
-                <th className="w-[11%] py-2 px-3 whitespace-nowrap">가동 · 메모리</th>
-                <th className="w-[11%] py-2 px-3 whitespace-nowrap">재시작 · 타이머</th>
-                <th className="w-[12%] py-2 px-3 whitespace-nowrap text-right">개별 제어</th>
+                <th className="w-[132px] py-2 px-3 whitespace-nowrap">상태 · 자동감시</th>
+                <th className="py-2 px-3 whitespace-nowrap">프로그램명 · 실행 경로</th>
+                <th className="w-[130px] py-2 px-3 whitespace-nowrap">프로세스 (번호)</th>
+                <th className="w-[145px] py-2 px-3 whitespace-nowrap">창 제목 · 응답</th>
+                <th className="w-[96px] py-2 px-3 whitespace-nowrap">가동 · 메모리</th>
+                <th className="w-[142px] py-2 px-3 whitespace-nowrap">재시작 · 타이머</th>
+                <th className="w-[186px] py-2 px-3 whitespace-nowrap text-right">개별 제어</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e2e8f0] bg-[#ffffff]">

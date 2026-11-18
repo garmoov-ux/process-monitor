@@ -153,13 +153,13 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
         <div className="text-[11px] text-[#64748b]">{memText}</div>
       </td>
 
-      <td className="py-2 px-3 align-middle whitespace-nowrap">
-        <div className="text-[#0f172a] font-semibold">재시작 {item.totalRestartCount}회</div>
-        <div className="text-[11px] text-[#2563eb] font-medium">
+      <td className="py-2 px-3 align-middle truncate">
+        <div className="text-[#0f172a] font-semibold truncate">재시작 {item.totalRestartCount}회</div>
+        <div className="text-[11px] text-[#2563eb] font-medium truncate">
           {item.countdownSec > 0
             ? `카운트: ${item.countdownSec}초`
             : item.target.periodicRestartEnabled && item.periodicRemainingSec != null
-              ? `주기 재시작: ${formatDuration(item.periodicRemainingSec)} 후`
+              ? `주기: ${formatDuration(item.periodicRemainingSec)} 후`
               : item.target.periodicRestartEnabled
                 ? `주기: ${formatDuration(item.target.periodicRestartIntervalSec ?? 3600)}`
                 : `유예 ${item.target.startupGraceSec}초 · 대기 ${item.target.restartDelaySec}초`}
