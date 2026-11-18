@@ -8,7 +8,7 @@ interface SettingsViewProps {
   config: AppConfig
   summary: DashboardSummary
   onSaveConfig: (nextConfig: AppConfig) => Promise<void>
-  onSyncNtpNow: () => Promise<void>
+  onSyncNtpNow: () => Promise<unknown>
   onRunCleanupNow: () => Promise<void>
 }
 
@@ -35,7 +35,7 @@ function SegmentedControl<T extends string | number | boolean>({
             key={String(opt.value)}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`h-[26px] px-2.5 rounded-[6px] text-[12px] whitespace-nowrap transition-all duration-150 active:scale-95 cursor-pointer select-none ${
+            className={`h-[26px] px-2.5 rounded-[6px] text-[11.5px] whitespace-nowrap transition-all duration-150 active:scale-95 cursor-pointer select-none ${
               active
                 ? 'bg-[#2563eb] text-white font-semibold'
                 : 'text-[#334155] hover:text-[#0f172a] font-medium'
@@ -74,11 +74,11 @@ const CLOSE_OPTIONS: SegmentOption<boolean>[] = [
   { label: '완전 종료', value: false }
 ]
 
-const NTP_INTERVAL_OPTIONS: SegmentOption<number>[] = [
-  { label: '10분', value: 10 },
-  { label: '30분', value: 30 },
-  { label: '60분', value: 60 },
-  { label: '180분', value: 180 }
+const NTP_SYNC_SEC_PRESETS: SegmentOption<number>[] = [
+  { label: '5초', value: 5 },
+  { label: '10초', value: 10 },
+  { label: '30초', value: 30 },
+  { label: '60초', value: 60 }
 ]
 
 const NTP_TIMEOUT_OPTIONS: SegmentOption<number>[] = [
@@ -91,6 +91,45 @@ const NTP_TIMEOUT_OPTIONS: SegmentOption<number>[] = [
 const inputCls =
   'h-[28px] px-2.5 rounded-[6px] bg-[#ffffff] border border-[#cbd5e1] text-[12px] text-[#0f172a] focus:outline-2 focus:outline-[#2563eb]'
 
+function buildSafeDraft(raw: AppConfig): AppConfig {
+  const servers: [string, string, string] = [
+    raw?.ntp?.servers?.[0] || 'time.bora.net',
+    raw?.ntp?.servers?.[1] || 'time.kriss.re.kr',
+    raw?.ntp?.servers?.[2] || 'pool.ntp.org'
+  ]
+  const ports: [number, number, number] = [
+    Number(raw?.ntp?.ports?.[0] || 123),
+    Number(raw?.ntp?.ports?.[1] || 123),
+    Number(raw?.ntp?.ports?.[2] || 123)
+  ]
+  const syncIntervalMin = Number(raw?.ntp?.syncIntervalMin || 60)
+  const syncIntervalSec =
+    raw?.ntp?.syncIntervalSec !== undefined && Number(raw.ntp.syncIntervalSec) >= 1
+      ? Number(raw.ntp.syncIntervalSec)
+      : syncIntervalMin * 60
+
+  return {
+    system: {
+      runOnBoot: Boolean(raw?.system?.runOnBoot),
+      minimizeToTray: raw?.system?.minimizeToTray !== false,
+      startMinimized: Boolean(raw?.system?.startMinimized),
+      checkIntervalMs: Number(raw?.system?.checkIntervalMs || 2000),
+      logRetentionDays: Number(raw?.system?.logRetentionDays || 30),
+      maintenanceMode: Boolean(raw?.system?.maintenanceMode)
+    },
+    ntp: {
+      enabled: raw?.ntp?.enabled !== false,
+      syncIntervalMin,
+      syncIntervalSec,
+      timeoutMs: Number(raw?.ntp?.timeoutMs || 2000),
+      maxOffsetLimitSec: Number(raw?.ntp?.maxOffsetLimitSec || 3600),
+      servers,
+      ports
+    },
+    targets: Array.isArray(raw?.targets) ? raw.targets : []
+  }
+}
+
 export const SettingsView: React.FC<SettingsViewProps> = ({
   config,
   summary,
@@ -98,33 +137,56 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSyncNtpNow,
   onRunCleanupNow
 }) => {
-  const [draft, setDraft] = useState<AppConfig>(config)
+  const [draft, setDraft] = useState<AppConfig>(() => buildSafeDraft(config))
   const [testingNtp, setTestingNtp] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setDraft(config)
+    setDraft(buildSafeDraft(config))
   }, [config])
 
   const updateServer = (idx: 0 | 1 | 2, address: string): void => {
     const nextServers: [string, string, string] = [...draft.ntp.servers] as [string, string, string]
     nextServers[idx] = address
-    setDraft({
-      ...draft,
-      ntp: { ...draft.ntp, servers: nextServers }
-    })
+    setDraft((prev) => ({
+      ...prev,
+      ntp: { ...prev.ntp, servers: nextServers }
+    }))
   }
 
   const updatePort = (idx: 0 | 1 | 2, portVal: number): void => {
-    const basePorts = Array.isArray(draft.ntp.ports) ? draft.ntp.ports : [123, 123, 123]
-    const nextPorts: [number, number, number] = [...basePorts] as [number, number, number]
+    const nextPorts: [number, number, number] = [...draft.ntp.ports] as [number, number, number]
     nextPorts[idx] = Math.min(65535, Math.max(1, Number(portVal) || 123))
-    setDraft({
-      ...draft,
-      ntp: { ...draft.ntp, ports: nextPorts }
-    })
+    setDraft((prev) => ({
+      ...prev,
+      ntp: { ...prev.ntp, ports: nextPorts }
+    }))
+  }
+
+  const setSyncSec = (secVal: number): void => {
+    const safeSec = Math.max(1, Math.min(86400, Math.round(Number(secVal) || 60)))
+    setDraft((prev) => ({
+      ...prev,
+      ntp: {
+        ...prev.ntp,
+        syncIntervalSec: safeSec,
+        syncIntervalMin: Math.max(1, Math.ceil(safeSec / 60))
+      }
+    }))
+  }
+
+  const handleSave = async (): Promise<void> => {
+    if (saving) return
+    setSaving(true)
+    try {
+      await onSaveConfig(draft)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleTestNtp = async (): Promise<void> => {
+    if (testingNtp) return
     setTestingNtp(true)
     try {
       await onSaveConfig(draft)
@@ -134,29 +196,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   }
 
-  const ports = Array.isArray(draft.ntp.ports) ? draft.ntp.ports : [123, 123, 123]
+  const currentSyncSec = draft.ntp.syncIntervalSec ?? 60
 
   return (
     <div className="h-full p-3.5 w-full min-h-0 flex flex-col gap-3">
-      {/* 상단 설정 저장 액션 바 (atoj / systemcheck 스타일) */}
+      {/* 상단 설정 저장 액션 바 */}
       <div className="bg-[#ffffff] border border-[#cbd5e1] rounded-[10px] px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <h2 className="text-[15px] font-bold text-[#0f172a] whitespace-nowrap">
             전체 환경 설정 관리
           </h2>
           <span className="text-[12px] text-[#64748b] truncate">
-            감시 주기, 부팅 자동 실행, 다중 시간 동기화 서버(주소·포트) 및 보관 기간을 관리합니다.
+            감시 주기, 부팅 자동 실행, 다중 시간 동기화 서버(주소·포트·초 단위 주기) 및 보관 기간을 관리합니다.
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <PillButton variant="pearl-capsule" size="sm" onClick={() => void onRunCleanupNow()}>
+          <PillButton
+            type="button"
+            variant="pearl-capsule"
+            size="sm"
+            onClick={() => void onRunCleanupNow()}
+          >
             <Sparkles className="w-3.5 h-3.5 text-[#2563eb]" />
             <span>경과 데이터 즉시 정리</span>
           </PillButton>
-          <PillButton variant="primary" size="sm" onClick={() => void onSaveConfig(draft)}>
+          <PillButton
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={saving}
+            onClick={() => void handleSave()}
+          >
             <Save className="w-3.5 h-3.5" />
-            <span>설정 저장</span>
+            <span>{saving ? '저장 중...' : '설정 저장'}</span>
           </PillButton>
         </div>
       </div>
@@ -175,10 +248,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={SCAN_INTERVAL_OPTIONS}
                   value={draft.system.checkIntervalMs}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, checkIntervalMs: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      system: { ...prev.system, checkIntervalMs: val }
+                    }))
                   }
                 />
               </div>
@@ -194,10 +267,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={BOOL_OPTIONS}
                   value={draft.system.runOnBoot}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, runOnBoot: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      system: { ...prev.system, runOnBoot: val }
+                    }))
                   }
                 />
               </div>
@@ -211,10 +284,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={CLOSE_OPTIONS}
                   value={draft.system.minimizeToTray}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, minimizeToTray: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      system: { ...prev.system, minimizeToTray: val }
+                    }))
                   }
                 />
               </div>
@@ -228,10 +301,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={BOOL_OPTIONS}
                   value={draft.system.startMinimized}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, startMinimized: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      system: { ...prev.system, startMinimized: val }
+                    }))
                   }
                 />
               </div>
@@ -253,10 +326,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={RETENTION_OPTIONS}
                   value={draft.system.logRetentionDays}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      system: { ...draft.system, logRetentionDays: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      system: { ...prev.system, logRetentionDays: val }
+                    }))
                   }
                 />
               </div>
@@ -277,10 +350,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="button"
                 variant="secondary-pill"
                 size="sm"
+                disabled={testingNtp}
                 onClick={() => void handleTestNtp()}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${testingNtp ? 'animate-spin' : ''}`} />
-                <span>즉시 동기화 테스트</span>
+                <span>{testingNtp ? '동기화 중...' : '즉시 동기화 테스트'}</span>
               </PillButton>
             }
             className="flex-1 min-h-0"
@@ -296,10 +370,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={BOOL_OPTIONS}
                   value={draft.ntp.enabled}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      ntp: { ...draft.ntp, enabled: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      ntp: { ...prev.ntp, enabled: val }
+                    }))
                   }
                 />
               </div>
@@ -321,28 +395,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="number"
                     min={1}
                     max={65535}
-                    value={ports[idx]}
+                    value={draft.ntp.ports[idx]}
                     onChange={(e) => updatePort(idx, Number(e.target.value))}
                     className={`${inputCls} w-[68px] text-center shrink-0`}
                   />
                 </div>
               ))}
 
+              {/* 자동 동기화 반복 주기: 5초/10초/30초/60초 퀵 버튼 + 초 단위 수동 입력 */}
               <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <div>
-                  <div className="text-[13px] font-semibold text-[#0f172a]">자동 동기화 반복 주기</div>
-                  <div className="text-[11px] text-[#64748b]">주기적으로 시스템 시각 오차를 보정</div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-semibold text-[#0f172a] whitespace-nowrap">
+                    시간 동기화 주기 (초)
+                  </div>
+                  <div className="text-[11px] text-[#64748b] whitespace-nowrap">
+                    5초 · 10초 · 30초 선택 또는 직접 입력
+                  </div>
                 </div>
-                <SegmentedControl
-                  options={NTP_INTERVAL_OPTIONS}
-                  value={draft.ntp.syncIntervalMin}
-                  onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      ntp: { ...draft.ntp, syncIntervalMin: val }
-                    })
-                  }
-                />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <SegmentedControl
+                    options={NTP_SYNC_SEC_PRESETS}
+                    value={currentSyncSec}
+                    onChange={(val) => setSyncSec(val)}
+                  />
+                  <div className="inline-flex items-center gap-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={86400}
+                      value={currentSyncSec}
+                      onChange={(e) => setSyncSec(Number(e.target.value))}
+                      title="동기화 주기(초) 직접 수동 입력"
+                      className={`${inputCls} w-[64px] text-right font-semibold`}
+                    />
+                    <span className="text-[11.5px] text-[#475569] font-medium">초</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
@@ -354,10 +442,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   options={NTP_TIMEOUT_OPTIONS}
                   value={draft.ntp.timeoutMs}
                   onChange={(val) =>
-                    setDraft({
-                      ...draft,
-                      ntp: { ...draft.ntp, timeoutMs: val }
-                    })
+                    setDraft((prev) => ({
+                      ...prev,
+                      ntp: { ...prev.ntp, timeoutMs: val }
+                    }))
                   }
                 />
               </div>
@@ -367,24 +455,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="text-[13px] font-semibold text-[#0f172a]">시간 급변 허용 한계 (초)</div>
                   <div className="text-[11px] text-[#64748b]">초과 오차 발생 시 시스템 시각 변경 보류</div>
                 </div>
-                <input
-                  type="number"
-                  min={60}
-                  max={86400}
-                  value={draft.ntp.maxOffsetLimitSec}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      ntp: { ...draft.ntp, maxOffsetLimitSec: Number(e.target.value) || 3600 }
-                    })
-                  }
-                  className={`${inputCls} w-[96px] text-right`}
-                />
+                <div className="inline-flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={60}
+                    max={86400}
+                    value={draft.ntp.maxOffsetLimitSec}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        ntp: { ...prev.ntp, maxOffsetLimitSec: Number(e.target.value) || 3600 }
+                      }))
+                    }
+                    className={`${inputCls} w-[84px] text-right font-semibold`}
+                  />
+                  <span className="text-[11.5px] text-[#475569] font-medium">초</span>
+                </div>
               </div>
             </div>
 
             <div className="text-[11.5px] text-[#64748b] px-1 pt-1">
-              기본 시간 동기화 포트는 123번이며, 사설 시간 서버 운용 시 개별 포트를 지정할 수 있습니다.
+              기본 포트는 123번이며, 동기화 주기는 5초·10초·30초 버튼 클릭 또는 우측 입력란에서 초 단위로 자유롭게 입력할 수 있습니다.
             </div>
           </UtilityCard>
         </div>

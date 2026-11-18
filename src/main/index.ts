@@ -48,12 +48,14 @@ if (!gotSingleInstanceLock) {
 
     const appIcon = createProcessMonitorAppIcon(64)
 
+    // atoj / systemcheck 와 동일하게 창 크기 고정 (resizable/maximizable/fullscreenable 비활성화)
     mainWindow = new BrowserWindow({
       width: 1040,
       height: 680,
-      minWidth: 960,
-      minHeight: 620,
       useContentSize: true,
+      resizable: false,
+      maximizable: false,
+      fullscreenable: false,
       show: !config.system.startMinimized,
       autoHideMenuBar: true,
       backgroundColor: '#f1f5f9',

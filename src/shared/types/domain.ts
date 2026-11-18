@@ -42,6 +42,7 @@ export interface SystemConfig {
 export interface NtpConfig {
   enabled: boolean
   syncIntervalMin: number
+  syncIntervalSec?: number
   timeoutMs: number
   maxOffsetLimitSec: number
   servers: [string, string, string]

@@ -33,9 +33,10 @@ export async function applyWindowsSystemTime(
 }
 
 function buildEndpointsWithPorts(config: NtpConfig): string[] {
-  const ports = Array.isArray(config.ports) ? config.ports : [123, 123, 123]
-  return config.servers.map((srv, idx) => {
-    const trimmed = (srv || '').trim()
+  const ports = Array.isArray(config?.ports) ? config.ports : [123, 123, 123]
+  const servers = Array.isArray(config?.servers) ? config.servers : []
+  return servers.map((srv, idx) => {
+    const trimmed = String(srv || '').trim()
     if (!trimmed) return ''
     if (trimmed.includes(':')) return trimmed
     const port = Number(ports[idx] ?? 123)
@@ -57,9 +58,14 @@ export class NtpScheduler {
 
   start(): void {
     this.stop()
-    if (!this.config.enabled) return
+    if (!this.config?.enabled) return
 
-    const intervalMs = Math.max(1, this.config.syncIntervalMin) * 60 * 1000
+    const sec =
+      this.config.syncIntervalSec !== undefined && this.config.syncIntervalSec >= 1
+        ? this.config.syncIntervalSec
+        : Math.max(1, this.config.syncIntervalMin || 60) * 60
+    const intervalMs = Math.max(1000, sec * 1000)
+
     this.timer = setInterval(() => {
       void this.syncNow(false)
     }, intervalMs)
@@ -125,8 +131,8 @@ export class NtpScheduler {
         const applyRes = await this.clockApplier(targetMs)
         applied = applyRes.ok
         applyNote = applyRes.ok
-          ? `시스템 시각 동기화 완료 (보정 오차 ${queryRes.offsetMs >= 0 ? '+' : ''}${queryRes.offsetMs}밀리초)`
-          : `오차 측정 성공(${queryRes.offsetMs}밀리초), 시스템 시계 반영 실패(관리자 권한 필요)`
+          ? `시스템 시각 동기화 완료 (보정 오차 ${queryRes.offsetMs >= 0 ? '+' : ''}${Math.round(queryRes.offsetMs)}밀리초)`
+          : `오차 측정 성공(${Math.round(queryRes.offsetMs)}밀리초), 시스템 시계 반영 실패(관리자 권한 필요)`
       }
 
       const record = this.ntpRepo.insertSyncRecord({
@@ -137,9 +143,25 @@ export class NtpScheduler {
         status: 'SUCCESS',
         message: applyNote
       })
-      writeSystemLog('INFO', `[${queryRes.serverUsed}] ${applyNote} (왕복 지연 ${queryRes.rttMs}밀리초)`)
+      writeSystemLog(
+        'INFO',
+        `[${queryRes.serverUsed}] ${applyNote} (왕복 지연 ${Math.round(queryRes.rttMs)}밀리초)`
+      )
       this.onUpdated?.()
       return record
+    } catch (err) {
+      const fallbackMsg = `시간 동기화 처리 중 예외 발생: ${(err as Error).message}`
+      writeSystemLog('ERROR', fallbackMsg)
+      return {
+        id: Date.now(),
+        serverUsed: '오류',
+        offsetMs: 0,
+        rttMs: 0,
+        applied: false,
+        status: 'FAILED',
+        message: fallbackMsg,
+        syncedAt: new Date().toISOString()
+      }
     } finally {
       this.syncing = false
     }

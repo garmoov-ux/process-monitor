@@ -23,6 +23,7 @@ export function createDefaultConfig(): AppConfig {
     ntp: {
       enabled: true,
       syncIntervalMin: Number.isFinite(defaultNtpMin) && defaultNtpMin >= 1 ? defaultNtpMin : 60,
+      syncIntervalSec: 60,
       timeoutMs: 2000,
       maxOffsetLimitSec: 3600,
       servers: [
@@ -90,6 +91,13 @@ export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): 
     ? raw.targets.map((item, idx) => normalizeTargetConfig(item, idx))
     : []
 
+  const syncIntervalMin = Math.max(1, Number(raw.ntp?.syncIntervalMin ?? defaults.ntp.syncIntervalMin))
+  const rawSyncSec = raw.ntp?.syncIntervalSec
+  const syncIntervalSec =
+    rawSyncSec !== undefined && Number.isFinite(Number(rawSyncSec)) && Number(rawSyncSec) >= 1
+      ? Math.max(1, Math.round(Number(rawSyncSec)))
+      : syncIntervalMin * 60
+
   return {
     system: {
       runOnBoot: Boolean(raw.system?.runOnBoot ?? defaults.system.runOnBoot),
@@ -101,7 +109,8 @@ export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): 
     },
     ntp: {
       enabled: Boolean(raw.ntp?.enabled ?? defaults.ntp.enabled),
-      syncIntervalMin: Math.max(1, Number(raw.ntp?.syncIntervalMin ?? defaults.ntp.syncIntervalMin)),
+      syncIntervalMin,
+      syncIntervalSec,
       timeoutMs: Math.max(500, Number(raw.ntp?.timeoutMs ?? defaults.ntp.timeoutMs)),
       maxOffsetLimitSec: Math.max(60, Number(raw.ntp?.maxOffsetLimitSec ?? defaults.ntp.maxOffsetLimitSec)),
       servers,
@@ -120,15 +129,29 @@ export function saveConfigAtomically(config: AppConfig, customPath?: string): Ap
   const tempPath = `${targetPath}.tmp`
   const payload = JSON.stringify(normalized, null, 2)
 
-  const fd = fs.openSync(tempPath, 'w')
   try {
-    fs.writeFileSync(fd, payload, 'utf-8')
-    fs.fsyncSync(fd)
-  } finally {
-    fs.closeSync(fd)
+    const fd = fs.openSync(tempPath, 'w')
+    try {
+      fs.writeFileSync(fd, payload, 'utf-8')
+      fs.fsyncSync(fd)
+    } finally {
+      fs.closeSync(fd)
+    }
+    fs.renameSync(tempPath, targetPath)
+  } catch {
+    // Windows 파일 감시자(Vite/Defender) 잠금으로 인한 EPERM 발생 시 안전한 직접 쓰기 폴백
+    try {
+      fs.writeFileSync(targetPath, payload, 'utf-8')
+    } catch {
+      // ignore write lock error
+    }
+    try {
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath)
+    } catch {
+      // ignore tmp unlink error
+    }
   }
 
-  fs.renameSync(tempPath, targetPath)
   return normalized
 }
 
