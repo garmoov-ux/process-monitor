@@ -1,0 +1,45 @@
+{
+  "name": "process-monitor",
+  "version": "1.0.0",
+  "description": "Windows 기반 다중 프로세스 실시간 감시·자동 복구(Watchdog) 및 다중 NTP 시간 동기화 데스크톱 애플리케이션",
+  "main": "./out/main/index.js",
+  "author": "㈜이노네트웍스 강홍선 <s_gain@naver.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "rebuild:node": "node -e \"const {execSync}=require('child_process');execSync('node ../prebuild-install/bin.js',{cwd:'node_modules/better-sqlite3',stdio:'inherit'})\"",
+    "test": "npm run rebuild:node && vitest run && npm run rebuild:electron",
+    "test:watch": "npm run rebuild:node && vitest",
+    "setup": "npm ci --ignore-scripts && node node_modules/electron/install.js && npm run rebuild:electron",
+    "rebuild:electron": "node -e \"const {execSync}=require('child_process');execSync('node ../prebuild-install/bin.js --runtime=electron --target=34.2.0',{cwd:'node_modules/better-sqlite3',stdio:'inherit'})\"",
+    "pack": "npm run rebuild:electron && npm run build && electron-builder --dir",
+    "dist:win": "npm run rebuild:electron && npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "dotenv": "^16.4.7",
+    "iconv-lite": "^0.6.3",
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.1",
+    "@tailwindcss/vite": "^4.0.6",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.13.4",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.0.0",
+    "tailwindcss": "^4.0.6",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}

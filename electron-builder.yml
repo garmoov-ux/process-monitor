@@ -1,0 +1,40 @@
+appId: com.inno.processmonitor
+productName: ProcessMonitor
+npmRebuild: false
+directories:
+  buildResources: build
+  output: release
+files:
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!tests/*"
+  - "!_ref/*"
+  - "!logs/*"
+  - "!data/*"
+  - "!electron.vite.config.*"
+  - "!vitest.config.*"
+  - "!tsconfig.*"
+asarUnpack:
+  - "**/*.node"
+extraFiles:
+  - from: "config.json"
+    to: "config.json"
+win:
+  icon: resources/icon.ico
+  requestedExecutionLevel: requireAdministrator
+  signAndEditExecutable: false
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+nsis:
+  artifactName: "ProcessMonitor_Setup.exe"
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+portable:
+  artifactName: "ProcessMonitor_Portable.exe"

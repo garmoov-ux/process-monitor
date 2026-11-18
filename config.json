@@ -1,0 +1,22 @@
+{
+  "system": {
+    "runOnBoot": false,
+    "minimizeToTray": true,
+    "startMinimized": false,
+    "checkIntervalMs": 2000,
+    "logRetentionDays": 30,
+    "maintenanceMode": false
+  },
+  "ntp": {
+    "enabled": true,
+    "syncIntervalMin": 60,
+    "timeoutMs": 2000,
+    "maxOffsetLimitSec": 3600,
+    "servers": [
+      "time.bora.net",
+      "time.kriss.re.kr",
+      "pool.ntp.org"
+    ]
+  },
+  "targets": []
+}
