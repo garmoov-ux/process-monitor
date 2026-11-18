@@ -169,6 +169,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }))
   }
 
+  const setScanSec = (secVal: number): void => {
+    const safeSec = Math.max(1, Math.min(3600, Math.round(Number(secVal) || 2)))
+    setDraft((prev) => ({
+      ...prev,
+      system: {
+        ...prev.system,
+        checkIntervalMs: safeSec * 1000
+      }
+    }))
+  }
+
   const setSyncSec = (secVal: number): void => {
     const safeSec = Math.max(1, Math.min(86400, Math.round(Number(secVal) || 60)))
     setDraft((prev) => ({
@@ -202,6 +213,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   }
 
+  const currentScanSec = Math.max(1, Math.round((draft.system.checkIntervalMs || 2000) / 1000))
   const currentSyncSec = draft.ntp.syncIntervalSec ?? 60
 
   return (
@@ -246,20 +258,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <UtilityCard title="프로세스 감시 및 시작 동작 설정" className="shrink-0">
             <div className="rounded-[8px] bg-[#f8fafc] border border-[#cbd5e1] divide-y divide-[#e2e8f0]">
               <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <div>
-                  <div className="text-[13px] font-semibold text-[#0f172a]">프로세스 상태 점검 주기</div>
-                  <div className="text-[11px] text-[#64748b]">실행 중 프로그램 스냅샷 수집 간격</div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-semibold text-[#0f172a] whitespace-nowrap">
+                    프로세스 상태 점검 주기 (초)
+                  </div>
+                  <div className="text-[11px] text-[#64748b] whitespace-nowrap">
+                    1초 · 2초 · 3초 · 5초 선택 또는 직접 입력
+                  </div>
                 </div>
-                <SegmentedControl
-                  options={SCAN_INTERVAL_OPTIONS}
-                  value={draft.system.checkIntervalMs}
-                  onChange={(val) =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      system: { ...prev.system, checkIntervalMs: val }
-                    }))
-                  }
-                />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <SegmentedControl
+                    options={SCAN_INTERVAL_OPTIONS}
+                    value={draft.system.checkIntervalMs}
+                    onChange={(val) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        system: { ...prev.system, checkIntervalMs: val }
+                      }))
+                    }
+                  />
+                  <div className="inline-flex items-center gap-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={3600}
+                      value={currentScanSec}
+                      onChange={(e) => setScanSec(Number(e.target.value))}
+                      title="프로세스 점검 주기(초) 직접 수동 입력"
+                      className={`${inputCls} w-[58px] text-right font-semibold`}
+                    />
+                    <span className="text-[11.5px] text-[#475569] font-medium">초</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-between gap-2 px-3 py-2">
