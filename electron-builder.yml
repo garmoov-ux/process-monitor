@@ -1,6 +1,6 @@
 appId: com.inno.processmonitor
 productName: ProcessMonitor
-afterPack: build/after-pack.cjs
+afterPack: resources/after-pack.cjs
 npmRebuild: false
 directories:
   buildResources: build
