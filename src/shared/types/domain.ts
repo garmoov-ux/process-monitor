@@ -28,6 +28,8 @@ export interface ProcessTargetConfig {
   hungThresholdCount: number
   maxRetriesInWindow: number
   retryWindowSec: number
+  periodicRestartEnabled?: boolean
+  periodicRestartIntervalSec?: number
 }
 
 export interface SystemConfig {
@@ -96,6 +98,7 @@ export interface ProcessRuntimeStatus {
   memoryKb: number
   uptimeSec: number
   countdownSec: number
+  periodicRemainingSec?: number | null
   consecutiveHungCount: number
   recentRetryCount: number
   totalRestartCount: number

@@ -20,6 +20,8 @@ export interface TargetFormValues {
   hungThresholdCount: number
   maxRetriesInWindow: number
   retryWindowSec: number
+  periodicRestartEnabled: boolean
+  periodicRestartIntervalSec: number
 }
 
 interface TargetManualFormTabProps {
@@ -246,6 +248,51 @@ export const TargetManualFormTab: React.FC<TargetManualFormTabProps> = ({
             />
             <span>저장 즉시 자동 감시</span>
           </label>
+        </div>
+      </div>
+
+      <div className="p-2.5 rounded-[8px] bg-[#090d16] border border-[#1e293b] flex items-center justify-between gap-2.5">
+        <label className="inline-flex items-center gap-1.5 text-slate-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={values.periodicRestartEnabled}
+            onChange={(e) => onChange('periodicRestartEnabled', e.target.checked)}
+            className="accent-[#2563eb]"
+          />
+          <span>주기적 자동 재시작 사용</span>
+        </label>
+        <div className="flex items-center gap-1.5">
+          {[
+            { label: '30초', sec: 30 },
+            { label: '10분', sec: 600 },
+            { label: '1시간', sec: 3600 },
+            { label: '6시간', sec: 21600 }
+          ].map((preset) => (
+            <button
+              key={preset.sec}
+              type="button"
+              onClick={() => {
+                onChange('periodicRestartEnabled', true)
+                onChange('periodicRestartIntervalSec', preset.sec)
+              }}
+              className={`h-[24px] px-2 rounded-[5px] text-[11px] cursor-pointer ${
+                values.periodicRestartEnabled && values.periodicRestartIntervalSec === preset.sec
+                  ? 'bg-[#2563eb] text-white font-semibold'
+                  : 'bg-[#111827] text-slate-300 border border-[#334155]'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+          <input
+            type="number"
+            min={5}
+            max={604800}
+            value={values.periodicRestartIntervalSec}
+            onChange={(e) => onChange('periodicRestartIntervalSec', Math.max(5, Number(e.target.value) || 5))}
+            className={`${inputCls} w-[76px] text-right`}
+          />
+          <span className="text-slate-400">초</span>
         </div>
       </div>
 

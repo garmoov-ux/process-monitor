@@ -31,7 +31,9 @@ const DEFAULT_FORM_VALUES: TargetFormValues = {
   checkNotResponding: true,
   hungThresholdCount: 3,
   maxRetriesInWindow: 5,
-  retryWindowSec: 180
+  retryWindowSec: 180,
+  periodicRestartEnabled: false,
+  periodicRestartIntervalSec: 3600
 }
 
 export const TargetModal: React.FC<TargetModalProps> = ({
@@ -79,7 +81,9 @@ export const TargetModal: React.FC<TargetModalProps> = ({
         checkNotResponding: initialTarget.checkNotResponding,
         hungThresholdCount: initialTarget.hungThresholdCount,
         maxRetriesInWindow: initialTarget.maxRetriesInWindow,
-        retryWindowSec: initialTarget.retryWindowSec
+        retryWindowSec: initialTarget.retryWindowSec,
+        periodicRestartEnabled: Boolean(initialTarget.periodicRestartEnabled),
+        periodicRestartIntervalSec: Number(initialTarget.periodicRestartIntervalSec ?? 3600)
       })
     } else {
       setModeTab('RUNNING')

@@ -73,7 +73,9 @@ export function normalizeTargetConfig(raw: Partial<ProcessTargetConfig>, index: 
     checkNotResponding: raw.checkNotResponding !== undefined ? Boolean(raw.checkNotResponding) : true,
     hungThresholdCount: Math.max(1, Number(raw.hungThresholdCount ?? 3)),
     maxRetriesInWindow: Math.max(1, Number(raw.maxRetriesInWindow ?? 5)),
-    retryWindowSec: Math.max(10, Number(raw.retryWindowSec ?? 180))
+    retryWindowSec: Math.max(10, Number(raw.retryWindowSec ?? 180)),
+    periodicRestartEnabled: Boolean(raw.periodicRestartEnabled),
+    periodicRestartIntervalSec: Math.max(5, Math.round(Number(raw.periodicRestartIntervalSec ?? 3600) || 3600))
   }
 }
 

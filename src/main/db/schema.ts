@@ -20,6 +20,8 @@ export function initializeDatabaseSchema(db: Database.Database): void {
       hung_threshold_count INTEGER NOT NULL DEFAULT 3,
       max_retries_in_window INTEGER NOT NULL DEFAULT 5,
       retry_window_sec INTEGER NOT NULL DEFAULT 180,
+      periodic_restart_enabled INTEGER NOT NULL DEFAULT 0,
+      periodic_restart_interval_sec INTEGER NOT NULL DEFAULT 3600,
       total_restart_count INTEGER NOT NULL DEFAULT 0,
       last_started_at TEXT,
       last_failure_at TEXT,
@@ -68,4 +70,20 @@ export function initializeDatabaseSchema(db: Database.Database): void {
       PRIMARY KEY (stat_date, target_id)
     );
   `)
+
+  const cols = db
+    .prepare(`PRAGMA table_info(process_targets)`)
+    .all() as Array<{ name: string }>
+  const colNames = new Set(cols.map((c) => c.name))
+
+  if (!colNames.has('periodic_restart_enabled')) {
+    db.exec(
+      `ALTER TABLE process_targets ADD COLUMN periodic_restart_enabled INTEGER NOT NULL DEFAULT 0`
+    )
+  }
+  if (!colNames.has('periodic_restart_interval_sec')) {
+    db.exec(
+      `ALTER TABLE process_targets ADD COLUMN periodic_restart_interval_sec INTEGER NOT NULL DEFAULT 3600`
+    )
+  }
 }

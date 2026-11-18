@@ -11,6 +11,7 @@ export interface StateTransitionAction {
   type: 'NONE' | 'SPAWN' | 'GRACEFUL_STOP' | 'FORCE_KILL_AND_RESTART' | 'FORCE_KILL_ONLY'
   pid?: number
   reason?: string
+  isPeriodic?: boolean
 }
 
 export class ProcessStateMachine {
@@ -28,6 +29,7 @@ export class ProcessStateMachine {
   private lastFailureAt: string | null = null
   private lastMessage = '감시 대기 중'
   private stopThenRestart = false
+  private periodicRestartInProgress = false
 
   constructor(
     private target: ProcessTargetConfig,
@@ -80,11 +82,18 @@ export class ProcessStateMachine {
     this.transitionTo('INVALID_PATH', reason)
   }
 
-  markSpawnSuccess(pid: number | null, isAutoRestart: boolean, nowIso = new Date().toISOString()): void {
+  markSpawnSuccess(
+    pid: number | null,
+    isAutoRestart: boolean,
+    nowIso = new Date().toISOString(),
+    countTowardsCircuitBreaker = isAutoRestart
+  ): void {
     const nowNs = this.clockNs()
     if (isAutoRestart) {
-      this.retryTimestampsNs.push(nowNs)
       this.totalRestartCount += 1
+    }
+    if (countTowardsCircuitBreaker) {
+      this.retryTimestampsNs.push(nowNs)
     }
     this.pid = pid
     this.runningSinceNs = nowNs
@@ -96,6 +105,7 @@ export class ProcessStateMachine {
   requestManualStop(thenRestart = false): StateTransitionAction {
     const nowNs = this.clockNs()
     this.stopThenRestart = thenRestart
+    this.periodicRestartInProgress = false
     if (this.pid) {
       const targetPid = this.pid
       this.transitionTo(
@@ -122,6 +132,23 @@ export class ProcessStateMachine {
     this.transitionTo('RESTART_PENDING', '차단 해제 후 감시 재개', nowNs)
   }
 
+  private checkPeriodicRestartDue(snapshot: RunningProcessSnapshot, nowNs: bigint): StateTransitionAction | null {
+    if (!this.target.periodicRestartEnabled || !this.runningSinceNs) return null
+    const intervalSec = Math.max(5, this.target.periodicRestartIntervalSec ?? 3600)
+    const uptime = this.elapsedSecSince(this.runningSinceNs, nowNs)
+    if (uptime < intervalSec) return null
+
+    this.stopThenRestart = true
+    this.periodicRestartInProgress = true
+    this.transitionTo('STOPPING', `주기적 자동 재시작 (${intervalSec}초 경과) - 정상 종료 대기`, nowNs)
+    return {
+      type: 'GRACEFUL_STOP',
+      pid: snapshot.pid,
+      reason: `주기적 자동 재시작 (${intervalSec}초 경과)`,
+      isPeriodic: true
+    }
+  }
+
   evaluateTick(
     snapshot: RunningProcessSnapshot | null,
     maintenanceMode: boolean,
@@ -131,14 +158,19 @@ export class ProcessStateMachine {
     const nowNs = this.clockNs()
     this.pruneRetryWindow(nowNs)
 
-    // 종료 처리 중(STOPPING)인 경우 개별 감시 비활성화 여부와 무관하게 정상 종료 대기 -> 강제 종료까지 완수
     if (this.state === 'STOPPING') {
       if (!snapshot) {
+        const wasPeriodic = this.periodicRestartInProgress
+        this.periodicRestartInProgress = false
         this.pid = null
         this.runningSinceNs = null
         if (this.stopThenRestart) {
           this.stopThenRestart = false
-          return { type: 'SPAWN', reason: '정상 종료 완료 후 재기동' }
+          return {
+            type: 'SPAWN',
+            reason: wasPeriodic ? '주기적 자동 재시작 기동' : '정상 종료 완료 후 재기동',
+            isPeriodic: wasPeriodic
+          }
         }
         this.transitionTo('PAUSED', '정상 종료 완료', nowNs)
         return { type: 'NONE' }
@@ -148,11 +180,18 @@ export class ProcessStateMachine {
       if (elapsed >= this.target.gracefulTimeoutSec) {
         const killPid = snapshot.pid
         const shouldRestart = this.stopThenRestart
+        const wasPeriodic = this.periodicRestartInProgress
         this.stopThenRestart = false
+        this.periodicRestartInProgress = false
         this.pid = null
         this.runningSinceNs = null
         if (shouldRestart) {
-          return { type: 'FORCE_KILL_AND_RESTART', pid: killPid, reason: '정상 종료 유예 초과로 강제 재시작' }
+          return {
+            type: 'FORCE_KILL_AND_RESTART',
+            pid: killPid,
+            reason: wasPeriodic ? '주기적 재시작 종료 대기 초과로 강제 재기동' : '정상 종료 유예 초과로 강제 재시작',
+            isPeriodic: wasPeriodic
+          }
         }
         this.transitionTo('PAUSED', '유예 시간 초과로 강제 종료 완료', nowNs)
         return { type: 'FORCE_KILL_ONLY', pid: killPid, reason: '정상 종료 유예 초과 강제 종료' }
@@ -161,20 +200,11 @@ export class ProcessStateMachine {
     }
 
     if (maintenanceMode || !this.target.enabled) {
-      if (snapshot) {
-        this.pid = snapshot.pid
-        this.detectedWindowTitle = snapshot.windowTitle
-        this.responding = snapshot.responding
-        this.memoryKb = snapshot.memoryKb
-      } else {
-        this.pid = null
-        this.memoryKb = 0
-      }
-      this.transitionTo(
-        'PAUSED',
-        maintenanceMode ? '전체 점검 모드로 감시 일시정지' : '개별 감시 일시정지',
-        nowNs
-      )
+      this.pid = snapshot ? snapshot.pid : null
+      this.detectedWindowTitle = snapshot ? snapshot.windowTitle : this.detectedWindowTitle
+      this.responding = snapshot ? snapshot.responding : true
+      this.memoryKb = snapshot ? snapshot.memoryKb : 0
+      this.transitionTo('PAUSED', maintenanceMode ? '전체 점검 모드로 감시 일시정지' : '개별 감시 일시정지', nowNs)
       return { type: 'NONE' }
     }
 
@@ -198,6 +228,8 @@ export class ProcessStateMachine {
         this.detectedWindowTitle = snapshot.windowTitle
         this.responding = snapshot.responding
         this.memoryKb = snapshot.memoryKb
+        const periodicAct = this.checkPeriodicRestartDue(snapshot, nowNs)
+        if (periodicAct) return periodicAct
       }
       const elapsed = this.elapsedSecSince(this.stateEnteredAtNs, nowNs)
       if (elapsed >= this.target.startupGraceSec) {
@@ -225,30 +257,21 @@ export class ProcessStateMachine {
         if (this.consecutiveHungCount >= this.target.hungThresholdCount) {
           this.lastFailureAt = new Date().toISOString()
           if (this.retryTimestampsNs.length >= this.target.maxRetriesInWindow) {
-            this.transitionTo(
-              'CIRCUIT_OPEN',
-              `연속 실패 한도(${this.target.maxRetriesInWindow}회) 초과로 자동 재시작 차단`,
-              nowNs
-            )
+            this.transitionTo('CIRCUIT_OPEN', `연속 실패 한도(${this.target.maxRetriesInWindow}회) 초과로 자동 재시작 차단`, nowNs)
             return { type: 'NONE' }
           }
           const hungPid = snapshot.pid
           this.consecutiveHungCount = 0
-          return {
-            type: 'FORCE_KILL_AND_RESTART',
-            pid: hungPid,
-            reason: `응답 없음 연속 ${this.target.hungThresholdCount}회 감지`
-          }
+          return { type: 'FORCE_KILL_AND_RESTART', pid: hungPid, reason: `응답 없음 연속 ${this.target.hungThresholdCount}회 감지` }
         }
-        this.transitionTo(
-          'HUNG_DETECTED',
-          `응답 없음 감지 (${this.consecutiveHungCount}/${this.target.hungThresholdCount}회)`,
-          nowNs
-        )
+        this.transitionTo('HUNG_DETECTED', `응답 없음 감지 (${this.consecutiveHungCount}/${this.target.hungThresholdCount}회)`, nowNs)
         return { type: 'NONE' }
       }
 
       this.consecutiveHungCount = 0
+      const periodicAct = this.checkPeriodicRestartDue(snapshot, nowNs)
+      if (periodicAct) return periodicAct
+
       if (this.state !== 'RUNNING') {
         this.transitionTo('RUNNING', '정상 가동 중', nowNs)
       }
@@ -264,22 +287,15 @@ export class ProcessStateMachine {
 
   private handleMissingOrCrash(nowNs: bigint, reason: string): StateTransitionAction {
     if (this.retryTimestampsNs.length >= this.target.maxRetriesInWindow) {
-      this.transitionTo(
-        'CIRCUIT_OPEN',
-        `${this.target.retryWindowSec}초 내 ${this.target.maxRetriesInWindow}회 재시작 실패로 자동 복구 차단`,
-        nowNs
-      )
+      this.transitionTo('CIRCUIT_OPEN', `${this.target.retryWindowSec}초 내 ${this.target.maxRetriesInWindow}회 재시작 실패로 자동 복구 차단`, nowNs)
       return { type: 'NONE' }
     }
-
     if (this.state !== 'RESTART_PENDING') {
       this.lastFailureAt = new Date().toISOString()
       this.transitionTo('RESTART_PENDING', `${reason} - ${this.target.restartDelaySec}초 후 재실행`, nowNs)
       return { type: 'NONE' }
     }
-
-    const elapsed = this.elapsedSecSince(this.stateEnteredAtNs, nowNs)
-    if (elapsed >= this.target.restartDelaySec) {
+    if (this.elapsedSecSince(this.stateEnteredAtNs, nowNs) >= this.target.restartDelaySec) {
       return { type: 'SPAWN', reason: `재시작 대기(${this.target.restartDelaySec}초) 경과` }
     }
     return { type: 'NONE' }
@@ -288,7 +304,6 @@ export class ProcessStateMachine {
   getRuntimeStatus(): ProcessRuntimeStatus {
     const nowNs = this.clockNs()
     this.pruneRetryWindow(nowNs)
-
     let countdownSec = 0
     if (this.state === 'RESTART_PENDING') {
       countdownSec = Math.max(0, this.target.restartDelaySec - this.elapsedSecSince(this.stateEnteredAtNs, nowNs))
@@ -298,8 +313,12 @@ export class ProcessStateMachine {
       countdownSec = Math.max(0, this.target.gracefulTimeoutSec - this.elapsedSecSince(this.stateEnteredAtNs, nowNs))
     }
 
-    const uptimeSec =
-      this.pid && this.runningSinceNs ? this.elapsedSecSince(this.runningSinceNs, nowNs) : 0
+    const uptimeSec = this.pid && this.runningSinceNs ? this.elapsedSecSince(this.runningSinceNs, nowNs) : 0
+    const intervalSec = Math.max(5, this.target.periodicRestartIntervalSec ?? 3600)
+    const periodicRemainingSec =
+      this.target.periodicRestartEnabled && this.pid && this.runningSinceNs
+        ? Math.max(0, intervalSec - uptimeSec)
+        : null
 
     return {
       target: this.target,
@@ -310,6 +329,7 @@ export class ProcessStateMachine {
       memoryKb: this.memoryKb,
       uptimeSec,
       countdownSec,
+      periodicRemainingSec,
       consecutiveHungCount: this.consecutiveHungCount,
       recentRetryCount: this.retryTimestampsNs.length,
       totalRestartCount: this.totalRestartCount,

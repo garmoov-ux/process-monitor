@@ -36,7 +36,9 @@ const DEFAULT_VALUES: TargetFormValues = {
   checkNotResponding: true,
   hungThresholdCount: 3,
   maxRetriesInWindow: 5,
-  retryWindowSec: 180
+  retryWindowSec: 180,
+  periodicRestartEnabled: false,
+  periodicRestartIntervalSec: 3600
 }
 
 export const TargetManageView: React.FC<TargetManageViewProps> = ({
@@ -96,7 +98,9 @@ export const TargetManageView: React.FC<TargetManageViewProps> = ({
       checkNotResponding: t.checkNotResponding,
       hungThresholdCount: t.hungThresholdCount,
       maxRetriesInWindow: t.maxRetriesInWindow,
-      retryWindowSec: t.retryWindowSec
+      retryWindowSec: t.retryWindowSec,
+      periodicRestartEnabled: Boolean(t.periodicRestartEnabled),
+      periodicRestartIntervalSec: Number(t.periodicRestartIntervalSec ?? 3600)
     })
   }
 

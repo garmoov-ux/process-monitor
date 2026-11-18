@@ -17,11 +17,13 @@ export class ProcessRepository {
       INSERT INTO process_targets (
         id, name, process_name, watch_process_name, window_title, exec_path, args, work_dir,
         window_style, enabled, restart_delay_sec, startup_grace_sec, graceful_timeout_sec,
-        check_not_responding, hung_threshold_count, max_retries_in_window, retry_window_sec, updated_at
+        check_not_responding, hung_threshold_count, max_retries_in_window, retry_window_sec,
+        periodic_restart_enabled, periodic_restart_interval_sec, updated_at
       ) VALUES (
         @id, @name, @processName, @watchProcessName, @windowTitle, @execPath, @args, @workDir,
         @windowStyle, @enabled, @restartDelaySec, @startupGraceSec, @gracefulTimeoutSec,
-        @checkNotResponding, @hungThresholdCount, @maxRetriesInWindow, @retryWindowSec, @updatedAt
+        @checkNotResponding, @hungThresholdCount, @maxRetriesInWindow, @retryWindowSec,
+        @periodicRestartEnabled, @periodicRestartIntervalSec, @updatedAt
       )
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
@@ -40,6 +42,8 @@ export class ProcessRepository {
         hung_threshold_count = excluded.hung_threshold_count,
         max_retries_in_window = excluded.max_retries_in_window,
         retry_window_sec = excluded.retry_window_sec,
+        periodic_restart_enabled = excluded.periodic_restart_enabled,
+        periodic_restart_interval_sec = excluded.periodic_restart_interval_sec,
         updated_at = excluded.updated_at
     `)
 
@@ -63,6 +67,8 @@ export class ProcessRepository {
           hungThresholdCount: item.hungThresholdCount,
           maxRetriesInWindow: item.maxRetriesInWindow,
           retryWindowSec: item.retryWindowSec,
+          periodicRestartEnabled: item.periodicRestartEnabled ? 1 : 0,
+          periodicRestartIntervalSec: item.periodicRestartIntervalSec ?? 3600,
           updatedAt: now
         })
       }

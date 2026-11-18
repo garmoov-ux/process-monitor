@@ -41,11 +41,21 @@ export async function executeTransitionAction(params: {
   let restartedDelta = 0
   let hungDelta = 0
 
-  if (action.type === 'SPAWN') {
+  if (action.type === 'GRACEFUL_STOP' && action.pid) {
+    await requestGracefulStop(action.pid)
+    recordTargetEvent(
+      processRepo,
+      target,
+      'RESTART',
+      'INFO',
+      action.pid,
+      `${action.reason || '주기적 자동 재시작 요청'} - 정상 종료 대기(${target.gracefulTimeoutSec}초)`
+    )
+  } else if (action.type === 'SPAWN') {
     const spawnRes = await spawnTargetProcess(target)
     if (spawnRes.ok) {
       const nowIso = new Date().toISOString()
-      machine.markSpawnSuccess(spawnRes.pid, true, nowIso)
+      machine.markSpawnSuccess(spawnRes.pid, true, nowIso, !action.isPeriodic)
       processRepo.incrementRestart(target.id, nowIso)
       restartedDelta = 1
       recordTargetEvent(
@@ -80,10 +90,10 @@ export async function executeTransitionAction(params: {
     const spawnRes = await spawnTargetProcess(target)
     if (spawnRes.ok) {
       const nowIso = new Date().toISOString()
-      machine.markSpawnSuccess(spawnRes.pid, true, nowIso)
+      machine.markSpawnSuccess(spawnRes.pid, true, nowIso, !action.isPeriodic)
       processRepo.incrementRestart(target.id, nowIso)
       restartedDelta = 1
-      hungDelta = 1
+      hungDelta = action.isPeriodic ? 0 : 1
       recordTargetEvent(
         processRepo,
         target,

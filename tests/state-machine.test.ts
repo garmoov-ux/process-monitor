@@ -165,6 +165,48 @@ describe('ProcessStateMachine (단조 증가 시간 기반 상태 전이 검증)
     expect(forceAct.type).toBe('FORCE_KILL_ONLY')
     expect(forceAct.pid).toBe(7777)
   })
+
+  it('주기적 자동 재시작(periodicRestartEnabled) 설정 시 지정된 초 경과마다 서킷 브레이커 차단 없이 프로세스를 재기동한다', () => {
+    let nowSec = 1000n
+    const clock = (): bigint => nowSec * 1_000_000_000n
+    const target = createSampleTarget({
+      periodicRestartEnabled: true,
+      periodicRestartIntervalSec: 30,
+      gracefulTimeoutSec: 4,
+      maxRetriesInWindow: 2,
+      retryWindowSec: 180
+    })
+    const sm = new ProcessStateMachine(target, clock)
+
+    // 최초 실행 감지
+    sm.evaluateTick(createSnapshot(true, 8001), false, true)
+    expect(sm.getRuntimeStatus().state).toBe('RUNNING')
+    expect(sm.getRuntimeStatus().periodicRemainingSec).toBe(30)
+
+    // 20초 경과: 남은 주기 10초
+    nowSec = 1020n
+    expect(sm.evaluateTick(createSnapshot(true, 8001), false, true).type).toBe('NONE')
+    expect(sm.getRuntimeStatus().periodicRemainingSec).toBe(10)
+
+    // 30초 경과: 주기적 재시작 도달 -> GRACEFUL_STOP 반환 및 STOPPING 진입
+    nowSec = 1030n
+    const periodicStop = sm.evaluateTick(createSnapshot(true, 8001), false, true)
+    expect(periodicStop.type).toBe('GRACEFUL_STOP')
+    expect(periodicStop.pid).toBe(8001)
+    expect(periodicStop.isPeriodic).toBe(true)
+    expect(sm.getRuntimeStatus().state).toBe('STOPPING')
+
+    // 프로세스가 정상 종료되어 스냅샷이 사라지면 즉시 SPAWN(isPeriodic=true) 반환
+    nowSec = 1032n
+    const periodicSpawn = sm.evaluateTick(null, false, true)
+    expect(periodicSpawn.type).toBe('SPAWN')
+    expect(periodicSpawn.isPeriodic).toBe(true)
+
+    // 주기적 재시작으로 기동 성공 시 총 재시작 횟수는 증가하되 연속 실패(recentRetryCount)에는 누적되지 않음
+    sm.markSpawnSuccess(8002, true, new Date().toISOString(), !periodicSpawn.isPeriodic)
+    expect(sm.getRuntimeStatus().totalRestartCount).toBe(1)
+    expect(sm.getRuntimeStatus().recentRetryCount).toBe(0)
+  })
 })
 
 describe('evaluateRebootSchedule (정기 시스템 재시작 월·일 선택 및 미실행 보완/중복 방지 검증)', () => {
