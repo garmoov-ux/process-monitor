@@ -8,7 +8,7 @@
 3. **`design-system.md`**: `DESIGN.md`(Apple Design System) 기반 컬러(`#0066cc`, `#f5f5f7`, `#1d1d1f`, `#272729`), 고정 뷰포트(`h-screen overflow-hidden`), Pretendard 오프라인 내장 폰트, 100% 한글화 UI 규칙
 4. **`security-and-env.md`**: `.env` / `.env.example` 환경변수 분리, Electron `contextIsolation: true`, 외부 프로세스 `spawn` 인자 배열 검증, SQLite Prepared Statement 및 `WAL` 모드 보안 규칙
 5. **`testing-and-verification.md`**: 프로세스 상태 머신(단조 증가 시간 기준), 다중 NTP Failover 및 오차 한계 검증, 원자적 설정 저장(`config.json`), 인메모리 SQLite 테스트, 빌드 검증 절차
-6. **`git-workflow.md`**: `<type>(<scope>): <한글 커밋 요약>` 커밋 컨벤션 및 저장소 보안 규칙
+6. **`git-workflow.md`**: `<type>(<scope>): <한글 커밋 요약>` 커밋 컨벤션, 자율 브랜치 운용/병합/푸시 자동화 및 저장소 보안 규칙
 
 ## 1. 언어 및 커뮤니케이션 스타일
 - 모든 설명, 코드 주석, 보고서(Artifact), 커밋 메시지 요약은 한국어로 작성한다.
