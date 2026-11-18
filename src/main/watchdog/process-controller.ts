@@ -142,7 +142,7 @@ export async function spawnTargetProcess(
 export async function requestGracefulStop(pid: number): Promise<boolean> {
   if (!Number.isInteger(pid) || pid <= 0) return false
 
-  return new Promise((resolve) => {
+  const ok = await new Promise<boolean>((resolve) => {
     execFile(
       'taskkill.exe',
       ['/PID', String(pid)],
@@ -150,6 +150,18 @@ export async function requestGracefulStop(pid: number): Promise<boolean> {
       (err) => {
         resolve(!err)
       }
+    )
+  })
+  if (ok) return true
+
+  // 관리자 권한으로 실행 중인 프로세스인 경우 권한 상승 taskkill로 정상 종료 유도
+  return new Promise<boolean>((resolve) => {
+    const psCmd = `Start-Process -FilePath 'taskkill.exe' -ArgumentList @('/PID', '${pid}') -Verb RunAs -WindowStyle Hidden -Wait`
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', psCmd],
+      { timeout: 6000, windowsHide: true },
+      (err) => resolve(!err)
     )
   })
 }
@@ -169,48 +181,50 @@ export async function forceKillProcessTree(pid: number, processName?: string): P
   })
 
   const safeImageName = (processName || '').trim()
-  if (safeImageName && /^[a-zA-Z0-9._ -]+$/.test(safeImageName)) {
-    const img = safeImageName.toLowerCase().endsWith('.exe')
-      ? safeImageName
-      : `${safeImageName}.exe`
+  const imgName =
+    safeImageName && /^[a-zA-Z0-9._ -]+$/.test(safeImageName)
+      ? safeImageName.toLowerCase().endsWith('.exe')
+        ? safeImageName
+        : `${safeImageName}.exe`
+      : ''
+
+  if (imgName) {
     await new Promise<void>((resolve) => {
       execFile(
         'taskkill.exe',
-        ['/F', '/T', '/IM', img],
+        ['/F', '/T', '/IM', imgName],
         { timeout: 5000, windowsHide: true },
         () => resolve()
       )
     })
   }
 
-  await delayMs(1000)
+  await delayMs(900)
 
   if (!isPidAlive(pid)) {
     return true
   }
 
-  // 일반 taskkill로 종료되지 않은 경우(관리자 권한 프로세스 등) PowerShell 강제 종료 시도
-  const killedByPs = await new Promise<boolean>((resolve) => {
+  // 일반 taskkill로 종료되지 않은 경우(SControlServer.exe 등 관리자 권한 프로세스) 권한 상승(-Verb RunAs)으로 강제 종료 수행
+  const elevatedKillArgs = imgName
+    ? `'/F', '/T', '/PID', '${pid}'`
+    : `'/F', '/T', '/PID', '${pid}'`
+  const psElevatedCmd = imgName
+    ? `Start-Process -FilePath 'taskkill.exe' -ArgumentList @(${elevatedKillArgs}) -Verb RunAs -WindowStyle Hidden -Wait; Start-Process -FilePath 'taskkill.exe' -ArgumentList @('/F', '/T', '/IM', '${imgName}') -Verb RunAs -WindowStyle Hidden -Wait`
+    : `Start-Process -FilePath 'taskkill.exe' -ArgumentList @(${elevatedKillArgs}) -Verb RunAs -WindowStyle Hidden -Wait`
+
+  const killedByElevated = await new Promise<boolean>((resolve) => {
     execFile(
       'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-Command',
-        `Stop-Process -Id ${pid} -Force -ErrorAction Stop`
-      ],
-      { timeout: 5000, windowsHide: true },
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', psElevatedCmd],
+      { timeout: 8000, windowsHide: true },
       (err) => {
         resolve(!err)
       }
     )
   })
 
-  if (killedByPs) {
-    await delayMs(500)
-  }
+  await delayMs(900)
 
-  return killedByTaskkill || killedByPs || !isPidAlive(pid)
+  return killedByTaskkill || killedByElevated || !isPidAlive(pid)
 }

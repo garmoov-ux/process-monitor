@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron'
+import { execFile, execFileSync } from 'child_process'
 import path from 'path'
 import { loadConfig } from './config/config-manager'
 import { closeDatabase, getDatabase } from './db/connection'
@@ -10,10 +11,35 @@ import { writeSystemLog } from './watchdog/file-logger'
 import { registerIpcHandlers } from './ipc/handlers'
 import { createProcessMonitorAppIcon, setupSystemTray } from './tray'
 
+function ensureWindowsAdminOnPackaged(): boolean {
+  if (process.platform !== 'win32' || !app.isPackaged) return false
+  if (process.argv.includes('--elevated')) return false
+
+  try {
+    execFileSync('net.exe', ['session'], { stdio: 'ignore', windowsHide: true })
+    return false
+  } catch {
+    // 현재 일반 권한으로 실행 중이므로 관리자 권한(RunAs)으로 재실행 시도
+    const targetExe = (process.env.PORTABLE_EXECUTABLE_FILE || process.execPath).replace(/'/g, "''")
+    const workDir = (process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(targetExe)).replace(/'/g, "''")
+    const psCmd = `Start-Process -FilePath '${targetExe}' -WorkingDirectory '${workDir}' -ArgumentList '--elevated' -Verb RunAs`
+    execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', psCmd],
+      { windowsHide: true },
+      () => {
+        app.quit()
+      }
+    )
+    return true
+  }
+}
+
 let mainWindow: BrowserWindow | null = null
 let isQuitting = false
 
-const gotSingleInstanceLock = app.requestSingleInstanceLock()
+const RelaunchingAsAdmin = ensureWindowsAdminOnPackaged()
+const gotSingleInstanceLock = RelaunchingAsAdmin ? false : app.requestSingleInstanceLock()
 
 if (!gotSingleInstanceLock) {
   app.quit()
