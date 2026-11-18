@@ -16,7 +16,7 @@ import { validateExecutablePath } from './process-controller'
 import { ProcessStateMachine } from './state-machine'
 import { isBootTaskRegistered, syncBootSchedulerTask } from './boot-scheduler'
 import { writeSystemLog } from './file-logger'
-import { runRetentionCleanup } from './retention-cleaner'
+import { collectStorageInfo, runRetentionCleanup } from './retention-cleaner'
 import {
   executeManualTargetControl,
   executeTransitionAction,
@@ -96,6 +96,12 @@ export class WatchdogScheduler {
 
   getConfig(): AppConfig {
     return this.config
+  }
+
+  runCleanupNow(): MonitorStateSnapshot {
+    runRetentionCleanup(this.config.system.logRetentionDays, this.processRepo, this.ntpRepo)
+    this.broadcastStateIfVisible()
+    return this.getSnapshot()
   }
 
   async runScanTick(): Promise<void> {
@@ -352,7 +358,8 @@ export class WatchdogScheduler {
       processes,
       recentEvents: this.processRepo.queryEvents({ limit: 100 }),
       recentNtpHistory: this.ntpRepo.getRecentHistory(30),
-      dailyStats: this.processRepo.queryDailyStats(30)
+      dailyStats: this.processRepo.queryDailyStats(30),
+      storageInfo: collectStorageInfo()
     }
   }
 

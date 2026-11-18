@@ -4,23 +4,29 @@ import {
   BarChart3,
   Database,
   Info,
+  Layers,
   Pause,
   Play,
-  Plus,
   RefreshCw,
   ScrollText,
   Settings
 } from 'lucide-react'
 import { DashboardSummary } from '@shared/types/domain'
 
-export type NavTabId = 'dashboard' | 'history' | 'logs' | 'stats' | 'settings' | 'about'
+export type NavTabId =
+  | 'dashboard'
+  | 'targets'
+  | 'history'
+  | 'stats'
+  | 'logs'
+  | 'settings'
+  | 'about'
 
 interface GlobalNavProps {
   activeTab: NavTabId
   onSelectTab: (tab: NavTabId) => void
   summary: DashboardSummary
   onToggleMaintenance: (next: boolean) => void
-  onOpenAddModal: () => void
   onSyncNtpNow: () => void
 }
 
@@ -28,8 +34,14 @@ const TABS: Array<{ id: NavTabId; label: string; title: string; icon: React.Reac
   {
     id: 'dashboard',
     label: '현황',
-    title: '실시간 프로세스 상태 감시 및 개별 제어',
+    title: '실시간 프로세스 감시 현황 및 개별 제어',
     icon: <Activity className="w-[16px] h-[16px]" />
+  },
+  {
+    id: 'targets',
+    label: '대상',
+    title: '감시 대상 프로세스 등록 · 수정 및 실행 중 프로그램 선택',
+    icon: <Layers className="w-[16px] h-[16px]" />
   },
   {
     id: 'history',
@@ -40,25 +52,25 @@ const TABS: Array<{ id: NavTabId; label: string; title: string; icon: React.Reac
   {
     id: 'stats',
     label: '통계',
-    title: '일별 가동률(Uptime %) 및 재시작 통계',
+    title: '일별 가동률 및 재시작 통계 차트',
     icon: <BarChart3 className="w-[16px] h-[16px]" />
   },
   {
     id: 'logs',
     label: '로그',
-    title: '실시간 운영 이벤트 로그 스트림',
+    title: '실시간 운용 이벤트 로그 조회',
     icon: <ScrollText className="w-[16px] h-[16px]" />
   },
   {
     id: 'settings',
     label: '설정',
-    title: '감시 주기 · 다중 시간 동기화 · 부팅 자동 실행 설정',
+    title: '감시 주기 · 시간 동기화 서버/포트 · 보관 기간 설정',
     icon: <Settings className="w-[16px] h-[16px]" />
   },
   {
     id: 'about',
     label: '정보',
-    title: '프로그램 정보 및 상태 머신 규격',
+    title: '프로그램 정보 · 버전 기록 · 유지보수 도구',
     icon: <Info className="w-[16px] h-[16px]" />
   }
 ]
@@ -68,23 +80,21 @@ export const GlobalNav: React.FC<GlobalNavProps> = ({
   onSelectTab,
   summary,
   onToggleMaintenance,
-  onOpenAddModal,
   onSyncNtpNow
 }) => {
   const isWatching = !summary.maintenanceMode
 
   return (
-    <aside className="w-[60px] h-full bg-[#090d16] text-slate-300 border-r border-[#1e293b] flex flex-col items-center justify-between py-2 shrink-0 select-none">
-      {/* 상단 로고 배지 + 메인 아이콘 네비게이션 */}
+    <aside className="w-[62px] h-full bg-[#090d16] text-slate-300 border-r border-[#1e293b] flex flex-col items-center justify-between py-2 shrink-0 select-none">
       <div className="flex flex-col items-center gap-1.5 w-full">
         <button
           type="button"
           onClick={() => onSelectTab('about')}
-          title="ProcessMonitor 프로그램 정보"
-          className="relative w-[44px] h-[32px] rounded-[7px] bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] flex items-center justify-center transition-all duration-150 active:scale-95 cursor-pointer"
+          title="프로세스 모니터 프로그램 정보"
+          className="relative w-[46px] h-[32px] rounded-[8px] bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] flex items-center justify-center transition-all duration-150 active:scale-95 cursor-pointer"
         >
-          <span className="text-[11px] font-extrabold tracking-tight text-white leading-none">
-            P<span className="text-[#38bdf8]">Mon</span>
+          <span className="text-[11.5px] font-extrabold tracking-tight text-white leading-none">
+            감<span className="text-[#38bdf8]">시</span>
           </span>
           <span
             className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-[#090d16] ${
@@ -111,26 +121,15 @@ export const GlobalNav: React.FC<GlobalNavProps> = ({
                 }`}
               >
                 {t.icon}
-                <span className="text-[10px] leading-none">{t.label}</span>
+                <span className="text-[10.5px] leading-none">{t.label}</span>
               </button>
             )
           })}
         </nav>
       </div>
 
-      {/* 하단 퀵 제어 아이콘 버튼 (대상 추가 / 감시 토글 / 시간 동기화) */}
       <div className="flex flex-col items-center gap-1 w-full px-1.5">
         <div className="w-7 h-[1px] bg-[#1e293b] mb-0.5" />
-
-        <button
-          type="button"
-          onClick={onOpenAddModal}
-          title="새 감시 대상 프로세스 등록"
-          className="w-full py-1.5 rounded-[7px] bg-[#111827] hover:bg-[#1e293b] text-[#38bdf8] border border-[#1e293b] flex flex-col items-center justify-center gap-0.5 transition-all duration-150 active:scale-95 cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="text-[9.5px] font-medium leading-none">대상추가</span>
-        </button>
 
         <button
           type="button"
@@ -151,7 +150,7 @@ export const GlobalNav: React.FC<GlobalNavProps> = ({
           ) : (
             <Play className="w-3.5 h-3.5 ml-0.5" />
           )}
-          <span className="text-[9.5px] font-medium leading-none">
+          <span className="text-[10px] font-medium leading-none">
             {isWatching ? '감시중' : '점검모드'}
           </span>
         </button>
@@ -159,11 +158,11 @@ export const GlobalNav: React.FC<GlobalNavProps> = ({
         <button
           type="button"
           onClick={onSyncNtpNow}
-          title="다중 NTP 서버 즉시 시간 동기화 실행"
+          title="다중 시간 서버 즉시 동기화 실행"
           className="w-full py-1.5 rounded-[7px] bg-[#111827] hover:bg-[#1e293b] text-slate-300 hover:text-white border border-[#1e293b] flex flex-col items-center justify-center gap-0.5 transition-all duration-150 active:scale-95 cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5 text-[#38bdf8]" />
-          <span className="text-[9.5px] leading-none">시간동기</span>
+          <span className="text-[10px] leading-none">시간동기</span>
         </button>
       </div>
     </aside>

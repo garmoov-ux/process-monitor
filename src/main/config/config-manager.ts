@@ -29,7 +29,8 @@ export function createDefaultConfig(): AppConfig {
         envServers[0] || 'time.bora.net',
         envServers[1] || 'time.kriss.re.kr',
         envServers[2] || 'pool.ntp.org'
-      ]
+      ],
+      ports: [123, 123, 123]
     },
     targets: []
   }
@@ -59,6 +60,12 @@ export function normalizeTargetConfig(raw: Partial<ProcessTargetConfig>, index: 
   }
 }
 
+function normalizePort(val: unknown, fallback = 123): number {
+  const n = Number(val)
+  if (Number.isInteger(n) && n >= 1 && n <= 65535) return n
+  return fallback
+}
+
 export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): AppConfig {
   const defaults = createDefaultConfig()
   if (!raw || typeof raw !== 'object') {
@@ -70,6 +77,13 @@ export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): 
     String(rawServers[0] ?? defaults.ntp.servers[0]).trim() || defaults.ntp.servers[0],
     String(rawServers[1] ?? defaults.ntp.servers[1]).trim() || defaults.ntp.servers[1],
     String(rawServers[2] ?? defaults.ntp.servers[2]).trim() || defaults.ntp.servers[2]
+  ]
+
+  const rawPorts = Array.isArray(raw.ntp?.ports) ? raw.ntp!.ports : []
+  const ports: [number, number, number] = [
+    normalizePort(rawPorts[0], 123),
+    normalizePort(rawPorts[1], 123),
+    normalizePort(rawPorts[2], 123)
   ]
 
   const targets = Array.isArray(raw.targets)
@@ -90,7 +104,8 @@ export function normalizeAppConfig(raw: Partial<AppConfig> | null | undefined): 
       syncIntervalMin: Math.max(1, Number(raw.ntp?.syncIntervalMin ?? defaults.ntp.syncIntervalMin)),
       timeoutMs: Math.max(500, Number(raw.ntp?.timeoutMs ?? defaults.ntp.timeoutMs)),
       maxOffsetLimitSec: Math.max(60, Number(raw.ntp?.maxOffsetLimitSec ?? defaults.ntp.maxOffsetLimitSec)),
-      servers
+      servers,
+      ports
     },
     targets
   }

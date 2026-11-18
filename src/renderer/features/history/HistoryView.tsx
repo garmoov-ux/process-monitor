@@ -39,8 +39,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         const q = search.trim().toLowerCase()
         return (
           ev.targetName.toLowerCase().includes(q) ||
-          ev.message.toLowerCase().includes(q) ||
-          ev.eventType.toLowerCase().includes(q)
+          ev.message.toLowerCase().includes(q)
         )
       }
       return true
@@ -50,7 +49,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-2.5">
       <UtilityCard
-        title="프로세스 제어/장애 이력 및 시간 동기화 기록"
+        title="프로세스 제어 · 장애 이력 및 시간 동기화 기록"
         rightAction={
           <div className="flex items-center gap-1.5">
             <div className="inline-flex p-0.5 rounded-[7px] bg-[#090d16] border border-[#1e293b]">
@@ -76,11 +75,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
             <PillButton variant="pearl-capsule" size="sm" onClick={onExportCsv}>
               <FileSpreadsheet className="w-3 h-3 text-[#38bdf8]" />
-              <span>CSV</span>
+              <span>표 파일 저장</span>
             </PillButton>
             <PillButton variant="primary" size="sm" onClick={onExportPdf}>
               <Download className="w-3 h-3" />
-              <span>PDF 보고서</span>
+              <span>문서 보고서 출력</span>
             </PillButton>
           </div>
         }
@@ -128,20 +127,20 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               <SearchInput
                 value={search}
                 onChange={setSearch}
-                placeholder="이력 검색..."
+                placeholder="이력 내용 검색..."
                 className="w-[200px]"
               />
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto border border-[#1e293b] rounded-[8px] bg-[#0b0f19]/60">
-              <table className="w-full text-left border-collapse text-[11.5px]">
+              <table className="w-full table-fixed text-left border-collapse text-[11.5px]">
                 <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300">
                   <tr>
-                    <th className="py-2 px-2.5 font-semibold whitespace-nowrap">발생 시각</th>
-                    <th className="py-2 px-2.5 font-semibold whitespace-nowrap">등급</th>
-                    <th className="py-2 px-2.5 font-semibold whitespace-nowrap">대상 프로그램</th>
-                    <th className="py-2 px-2.5 font-semibold whitespace-nowrap">프로세스 번호</th>
-                    <th className="py-2 px-2.5 font-semibold whitespace-nowrap">상세 내용</th>
+                    <th className="w-[22%] py-2 px-2.5 font-semibold whitespace-nowrap">발생 시각</th>
+                    <th className="w-[12%] py-2 px-2.5 font-semibold whitespace-nowrap">등급</th>
+                    <th className="w-[20%] py-2 px-2.5 font-semibold whitespace-nowrap">대상 프로그램</th>
+                    <th className="w-[10%] py-2 px-2.5 font-semibold whitespace-nowrap">번호</th>
+                    <th className="w-[36%] py-2 px-2.5 font-semibold whitespace-nowrap">상세 내용</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e293b]/70">
@@ -174,13 +173,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                                 : '안내'}
                           </span>
                         </td>
-                        <td className="py-1.5 px-2.5 whitespace-nowrap font-semibold text-slate-200">
+                        <td className="py-1.5 px-2.5 truncate font-semibold text-slate-200">
                           {ev.targetName}
                         </td>
                         <td className="py-1.5 px-2.5 whitespace-nowrap text-slate-400">
                           {ev.pid ?? '-'}
                         </td>
-                        <td className="py-1.5 px-2.5 text-slate-200">{ev.message}</td>
+                        <td className="py-1.5 px-2.5 truncate text-slate-200" title={ev.message}>
+                          {ev.message}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -190,15 +191,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           </>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto border border-[#1e293b] rounded-[8px] bg-[#0b0f19]/60">
-            <table className="w-full text-left border-collapse text-[11.5px]">
+            <table className="w-full table-fixed text-left border-collapse text-[11.5px]">
               <thead className="sticky top-0 bg-[#111827] border-b border-[#1e293b] text-slate-300">
                 <tr>
-                  <th className="py-2 px-2.5 font-semibold whitespace-nowrap">동기화 시각</th>
-                  <th className="py-2 px-2.5 font-semibold whitespace-nowrap">상태</th>
-                  <th className="py-2 px-2.5 font-semibold whitespace-nowrap">응답 서버</th>
-                  <th className="py-2 px-2.5 font-semibold whitespace-nowrap">오차 (ms)</th>
-                  <th className="py-2 px-2.5 font-semibold whitespace-nowrap">지연 (ms)</th>
-                  <th className="py-2 px-2.5 font-semibold whitespace-nowrap">상세 결과</th>
+                  <th className="w-[22%] py-2 px-2.5 font-semibold whitespace-nowrap">동기화 시각</th>
+                  <th className="w-[13%] py-2 px-2.5 font-semibold whitespace-nowrap">판정</th>
+                  <th className="w-[18%] py-2 px-2.5 font-semibold whitespace-nowrap">응답 서버</th>
+                  <th className="w-[13%] py-2 px-2.5 font-semibold whitespace-nowrap">시간 오차</th>
+                  <th className="w-[12%] py-2 px-2.5 font-semibold whitespace-nowrap">왕복 지연</th>
+                  <th className="w-[22%] py-2 px-2.5 font-semibold whitespace-nowrap">상세 결과</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1e293b]/70">
@@ -231,16 +232,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                               : '실패'}
                         </span>
                       </td>
-                      <td className="py-1.5 px-2.5 whitespace-nowrap font-semibold text-slate-200">
+                      <td className="py-1.5 px-2.5 truncate font-semibold text-slate-200">
                         {item.serverUsed}
                       </td>
                       <td className="py-1.5 px-2.5 whitespace-nowrap text-[#38bdf8] font-medium">
-                        {item.offsetMs >= 0 ? `+${item.offsetMs}` : item.offsetMs} ms
+                        {item.offsetMs >= 0 ? `+${item.offsetMs}` : item.offsetMs} 밀리초
                       </td>
                       <td className="py-1.5 px-2.5 whitespace-nowrap text-slate-400">
-                        {item.rttMs} ms
+                        {item.rttMs} 밀리초
                       </td>
-                      <td className="py-1.5 px-2.5 text-slate-200">{item.message}</td>
+                      <td className="py-1.5 px-2.5 truncate text-slate-200" title={item.message}>
+                        {item.message}
+                      </td>
                     </tr>
                   ))
                 )}

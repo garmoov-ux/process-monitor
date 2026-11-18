@@ -12,6 +12,7 @@ export const IPC_CHANNELS = {
   TOGGLE_MAINTENANCE_MODE: 'process-monitor:toggle-maintenance-mode',
   UPDATE_CONFIG: 'process-monitor:update-config',
   SYNC_NTP_NOW: 'process-monitor:sync-ntp-now',
+  RUN_CLEANUP_NOW: 'process-monitor:run-cleanup-now',
   QUERY_EVENT_HISTORY: 'process-monitor:query-event-history',
   QUERY_NTP_HISTORY: 'process-monitor:query-ntp-history',
   QUERY_DAILY_STATS: 'process-monitor:query-daily-stats',

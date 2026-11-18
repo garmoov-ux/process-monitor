@@ -43,17 +43,17 @@ export function registerIpcHandlers(params: {
     const win = getMainWindow()
     const res = win
       ? await dialog.showOpenDialog(win, {
-          title: '감시 대상 실행 파일(.exe) 선택',
+          title: '감시 대상 실행 파일 선택',
           properties: ['openFile'],
           filters: [
-            { name: '실행 파일 (*.exe; *.bat; *.cmd)', extensions: ['exe', 'bat', 'cmd'] },
+            { name: '실행 프로그램 (*.exe; *.bat; *.cmd)', extensions: ['exe', 'bat', 'cmd'] },
             { name: '모든 파일 (*.*)', extensions: ['*'] }
           ]
         })
       : await dialog.showOpenDialog({
-          title: '감시 대상 실행 파일(.exe) 선택',
+          title: '감시 대상 실행 파일 선택',
           properties: ['openFile'],
-          filters: [{ name: '실행 파일 (*.exe)', extensions: ['exe'] }]
+          filters: [{ name: '실행 프로그램 (*.exe)', extensions: ['exe'] }]
         })
 
     if (res.canceled || res.filePaths.length === 0) return null
@@ -134,6 +134,10 @@ export function registerIpcHandlers(params: {
     }
   })
 
+  ipcMain.handle(IPC_CHANNELS.RUN_CLEANUP_NOW, () => {
+    return watchdog.runCleanupNow()
+  })
+
   ipcMain.handle(IPC_CHANNELS.QUERY_EVENT_HISTORY, (_e, filter: HistoryQueryFilter) => {
     return processRepo.queryEvents(filter)
   })
@@ -154,7 +158,7 @@ export function registerIpcHandlers(params: {
     return exportPdfReport(getMainWindow(), watchdog.getSnapshot())
   })
 
-  ipcMain.handle(IPC_CHANNELS.OPEN_PATH_FOLDER, async (_e, targetKind: 'LOGS' | 'DATA' | string) => {
+  ipcMain.handle(IPC_CHANNELS.OPEN_PATH_FOLDER, async (_e, targetKind: 'LOGS' | 'DATA' | 'CONFIG' | string) => {
     const paths = resolveAppPaths()
     if (targetKind === 'LOGS') {
       await shell.openPath(paths.logDir)
@@ -162,6 +166,10 @@ export function registerIpcHandlers(params: {
     }
     if (targetKind === 'DATA') {
       await shell.openPath(path.dirname(paths.dbPath))
+      return true
+    }
+    if (targetKind === 'CONFIG') {
+      shell.showItemInFolder(paths.configPath)
       return true
     }
     if (targetKind) {

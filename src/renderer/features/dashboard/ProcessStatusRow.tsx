@@ -91,7 +91,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
   onOpenExeLocation
 }) => {
   const badge = getStateBadgeMeta(item.state)
-  const memMb = item.memoryKb > 0 ? `${(item.memoryKb / 1024).toFixed(1)} MB` : '-'
+  const memText = item.memoryKb > 0 ? `${(item.memoryKb / 1024).toFixed(1)} 메가` : '-'
 
   return (
     <tr className="hover:bg-[#1e293b]/40">
@@ -114,7 +114,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
         </div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle max-w-[210px]">
+      <td className="py-2 px-2.5 align-middle max-w-[200px]">
         <div className="font-semibold text-slate-100 truncate">{item.target.name}</div>
         <div className="text-[10.5px] text-slate-400 truncate" title={item.target.execPath}>
           {item.target.execPath}
@@ -128,7 +128,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
         <div className="text-[10.5px] text-slate-400">번호: {item.pid ?? '미실행'}</div>
       </td>
 
-      <td className="py-2 px-2.5 align-middle max-w-[160px]">
+      <td className="py-2 px-2.5 align-middle max-w-[155px]">
         <div className="text-slate-200 truncate">{item.detectedWindowTitle || '-'}</div>
         <div className="text-[10.5px] text-slate-400 truncate">
           {item.pid
@@ -141,7 +141,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
 
       <td className="py-2 px-2.5 align-middle whitespace-nowrap">
         <div className="text-slate-200 font-medium">{formatDuration(item.uptimeSec)}</div>
-        <div className="text-[10.5px] text-slate-400">{memMb}</div>
+        <div className="text-[10.5px] text-slate-400">{memText}</div>
       </td>
 
       <td className="py-2 px-2.5 align-middle whitespace-nowrap">
@@ -209,7 +209,7 @@ export const ProcessStatusRow: React.FC<ProcessStatusRowProps> = ({
             variant="pearl-capsule"
             size="sm"
             onClick={() => onEditTarget(item.target)}
-            title="설정 편집"
+            title="대상 설정 수정"
           >
             <Edit3 className="w-3 h-3 text-slate-200" />
           </PillButton>

@@ -96,7 +96,8 @@ describe('다중 NTP Failover, 오차 제한 안전장치, 원자적 설정 및 
         syncIntervalMin: 60,
         timeoutMs: 500,
         maxOffsetLimitSec: 3600,
-        servers: [hugeOffsetServer.address, '127.0.0.1:9', '127.0.0.1:9']
+        servers: [hugeOffsetServer.address, '127.0.0.1:9', '127.0.0.1:9'],
+        ports: [123, 123, 123]
       },
       ntpRepo,
       undefined,

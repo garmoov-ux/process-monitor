@@ -4,7 +4,7 @@ import { useProcessMonitorState } from './hooks/useProcessMonitorState'
 import { GlobalNav, NavTabId } from './components/layout/GlobalNav'
 import { StatusFooter } from './components/layout/StatusFooter'
 import { DashboardView } from './features/dashboard/DashboardView'
-import { TargetModal } from './features/targets/TargetModal'
+import { TargetManageView } from './features/targets/TargetManageView'
 import { HistoryView } from './features/history/HistoryView'
 import { RealtimeLogsView } from './features/logs/RealtimeLogsView'
 import { MonthlyStatsView } from './features/stats/MonthlyStatsView'
@@ -25,29 +25,29 @@ export const App: React.FC = () => {
     toggleMaintenanceMode,
     updateConfig,
     syncNtpNow,
+    runCleanupNow,
     scanRunning
   } = useProcessMonitorState()
 
   const [activeTab, setActiveTab] = useState<NavTabId>('dashboard')
-  const [modalOpen, setModalOpen] = useState(false)
   const [editingTarget, setEditingTarget] = useState<ProcessTargetConfig | null>(null)
 
   if (loading || !snapshot) {
     return (
       <div className="h-screen w-screen overflow-hidden bg-[#0b0f19] flex items-center justify-center text-slate-300 select-none">
-        <p className="text-[13px] font-medium">ProcessMonitor 엔진 초기화 중...</p>
+        <p className="text-[13px] font-medium">프로세스 모니터 엔진 초기화 중...</p>
       </div>
     )
   }
 
-  const handleOpenAdd = (): void => {
+  const handleGoAddTarget = (): void => {
     setEditingTarget(null)
-    setModalOpen(true)
+    setActiveTab('targets')
   }
 
-  const handleOpenEdit = (target: ProcessTargetConfig): void => {
+  const handleGoEditTarget = (target: ProcessTargetConfig): void => {
     setEditingTarget(target)
-    setModalOpen(true)
+    setActiveTab('targets')
   }
 
   const handleExportCsv = async (): Promise<void> => {
@@ -60,23 +60,20 @@ export const App: React.FC = () => {
     showToast(res.message)
   }
 
-  const handleOpenFolder = (kind: 'LOGS' | 'DATA' | string): void => {
+  const handleOpenFolder = (kind: 'LOGS' | 'DATA' | 'CONFIG' | string): void => {
     void window.processMonitorApi.openPathFolder(kind)
   }
 
   return (
     <div className="h-screen w-screen overflow-hidden flex bg-[#0b0f19] text-slate-100 select-none">
-      {/* 좌측 슬림 아이콘 사이드바 */}
       <GlobalNav
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         summary={snapshot.summary}
         onToggleMaintenance={(next) => void toggleMaintenanceMode(next)}
-        onOpenAddModal={handleOpenAdd}
         onSyncNtpNow={() => void syncNtpNow()}
       />
 
-      {/* 우측 메인 콘텐츠 + 하단 슬림 상태바 */}
       <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
         {toastMessage && (
           <div className="fixed bottom-9 right-4 z-50 px-3.5 py-1.5 rounded-[7px] bg-[#1e293b] text-slate-100 text-[11.5px] font-medium border border-[#38bdf8]/40 shadow-lg">
@@ -89,14 +86,25 @@ export const App: React.FC = () => {
             <DashboardView
               summary={snapshot.summary}
               processes={snapshot.processes}
-              onOpenAddModal={handleOpenAdd}
-              onEditTarget={handleOpenEdit}
+              onOpenAddModal={handleGoAddTarget}
+              onEditTarget={handleGoEditTarget}
               onDeleteTarget={(id) => void deleteTarget(id)}
               onToggleTargetEnabled={(id, enabled) => void toggleTargetEnabled(id, enabled)}
               onControlTarget={(id, cmd) => void controlTarget(id, cmd)}
               onResetCircuit={(id) => void resetCircuitBreaker(id)}
               onSyncNtpNow={() => void syncNtpNow()}
               onOpenExeLocation={(execPath) => handleOpenFolder(execPath)}
+            />
+          )}
+
+          {activeTab === 'targets' && (
+            <TargetManageView
+              processes={snapshot.processes}
+              initialEditTarget={editingTarget}
+              onClearInitialEdit={() => setEditingTarget(null)}
+              onSaveTarget={upsertTarget}
+              onDeleteTarget={deleteTarget}
+              onScanRunning={scanRunning}
             />
           )}
 
@@ -122,6 +130,7 @@ export const App: React.FC = () => {
               summary={snapshot.summary}
               processes={snapshot.processes}
               dailyStats={snapshot.dailyStats}
+              onExportPdf={() => void handleExportPdf()}
             />
           )}
 
@@ -133,10 +142,18 @@ export const App: React.FC = () => {
               onSyncNtpNow={async () => {
                 await syncNtpNow()
               }}
+              onRunCleanupNow={runCleanupNow}
             />
           )}
 
-          {activeTab === 'about' && <ProgramInfoView />}
+          {activeTab === 'about' && (
+            <ProgramInfoView
+              storageInfo={snapshot.storageInfo || []}
+              onOpenFolder={handleOpenFolder}
+              onSyncNtpNow={() => void syncNtpNow()}
+              onRunCleanupNow={() => void runCleanupNow()}
+            />
+          )}
         </main>
 
         <StatusFooter
@@ -145,14 +162,6 @@ export const App: React.FC = () => {
           onOpenFolder={handleOpenFolder}
         />
       </div>
-
-      <TargetModal
-        open={modalOpen}
-        initialTarget={editingTarget}
-        onClose={() => setModalOpen(false)}
-        onSave={upsertTarget}
-        onScanRunning={scanRunning}
-      />
     </div>
   )
 }

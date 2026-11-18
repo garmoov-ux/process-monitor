@@ -63,6 +63,9 @@ export const processMonitorApi = {
   syncNtpNow: (): Promise<{ record: NtpSyncRecord; snapshot: MonitorStateSnapshot }> =>
     ipcRenderer.invoke(IPC_CHANNELS.SYNC_NTP_NOW),
 
+  runCleanupNow: (): Promise<MonitorStateSnapshot> =>
+    ipcRenderer.invoke(IPC_CHANNELS.RUN_CLEANUP_NOW),
+
   queryEventHistory: (filter: HistoryQueryFilter): Promise<ProcessEventRecord[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.QUERY_EVENT_HISTORY, filter),
 
@@ -78,7 +81,7 @@ export const processMonitorApi = {
   exportPdfReport: (): Promise<{ ok: boolean; filePath?: string; message: string }> =>
     ipcRenderer.invoke(IPC_CHANNELS.EXPORT_PDF_REPORT),
 
-  openPathFolder: (targetKind: 'LOGS' | 'DATA' | string): Promise<boolean> =>
+  openPathFolder: (targetKind: 'LOGS' | 'DATA' | 'CONFIG' | string): Promise<boolean> =>
     ipcRenderer.invoke(IPC_CHANNELS.OPEN_PATH_FOLDER, targetKind)
 }
 

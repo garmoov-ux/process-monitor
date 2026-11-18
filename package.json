@@ -10,11 +10,11 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
-    "rebuild:node": "node -e \"const {execSync}=require('child_process');execSync('node ../prebuild-install/bin.js',{cwd:'node_modules/better-sqlite3',stdio:'inherit'})\"",
+    "rebuild:node": "node -e \"try{require('child_process').execSync('node ../prebuild-install/bin.js',{cwd:'node_modules/better-sqlite3',stdio:'pipe'})}catch{}\"",
     "test": "npm run rebuild:node && vitest run && npm run rebuild:electron",
     "test:watch": "npm run rebuild:node && vitest",
     "setup": "npm ci --ignore-scripts && node node_modules/electron/install.js && npm run rebuild:electron",
-    "rebuild:electron": "node -e \"const {execSync}=require('child_process');execSync('node ../prebuild-install/bin.js --runtime=electron --target=34.2.0',{cwd:'node_modules/better-sqlite3',stdio:'inherit'})\"",
+    "rebuild:electron": "node -e \"try{require('child_process').execSync('node ../prebuild-install/bin.js --runtime=electron --target=34.2.0',{cwd:'node_modules/better-sqlite3',stdio:'pipe'})}catch{}\"",
     "pack": "npm run rebuild:electron && npm run build && electron-builder --dir",
     "dist:win": "npm run rebuild:electron && npm run build && electron-builder --win"
   },

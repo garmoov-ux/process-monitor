@@ -5,7 +5,7 @@ import { AppConfig, DashboardSummary } from '@shared/types/domain'
 interface StatusFooterProps {
   config: AppConfig
   summary: DashboardSummary
-  onOpenFolder: (kind: 'LOGS' | 'DATA') => void
+  onOpenFolder: (kind: 'LOGS' | 'DATA' | 'CONFIG') => void
 }
 
 export const StatusFooter: React.FC<StatusFooterProps> = ({
@@ -26,7 +26,7 @@ export const StatusFooter: React.FC<StatusFooterProps> = ({
   const ntpLabel = !config.ntp.enabled
     ? '시간 동기화 꺼짐'
     : lastNtp
-      ? `${lastNtp.serverUsed} (${lastNtp.offsetMs >= 0 ? '+' : ''}${lastNtp.offsetMs}ms)`
+      ? `${lastNtp.serverUsed} (${lastNtp.offsetMs >= 0 ? '+' : ''}${lastNtp.offsetMs}밀리초)`
       : '동기화 대기'
 
   return (
@@ -34,7 +34,7 @@ export const StatusFooter: React.FC<StatusFooterProps> = ({
       <div className="flex items-center gap-3 min-w-0 overflow-hidden">
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
           <Shield className="w-3 h-3 text-[#38bdf8]" />
-          <span className="text-slate-300 font-medium">주기</span>
+          <span className="text-slate-300 font-medium">감시주기</span>
           {(config.system.checkIntervalMs / 1000).toFixed(1)}초
         </span>
         <span className="text-[#1e293b]">|</span>
@@ -49,7 +49,7 @@ export const StatusFooter: React.FC<StatusFooterProps> = ({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className="inline-flex items-center gap-1 text-slate-300 font-mono text-[11px] mr-1">
+        <span className="inline-flex items-center gap-1 text-slate-300 text-[11px] mr-1">
           <Clock className="w-3 h-3 text-[#38bdf8]" />
           {clockText}
         </span>
@@ -59,7 +59,7 @@ export const StatusFooter: React.FC<StatusFooterProps> = ({
           className="h-[19px] px-2 rounded-[4px] bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-slate-300 inline-flex items-center gap-1 text-[10.5px] whitespace-nowrap cursor-pointer"
         >
           <FolderOpen className="w-2.5 h-2.5 text-[#38bdf8]" />
-          <span>로그폴더</span>
+          <span>로그 폴더</span>
         </button>
         <button
           type="button"
@@ -67,7 +67,7 @@ export const StatusFooter: React.FC<StatusFooterProps> = ({
           className="h-[19px] px-2 rounded-[4px] bg-[#111827] hover:bg-[#1e293b] border border-[#1e293b] text-slate-300 inline-flex items-center gap-1 text-[10.5px] whitespace-nowrap cursor-pointer"
         >
           <FolderOpen className="w-2.5 h-2.5 text-[#38bdf8]" />
-          <span>DB폴더</span>
+          <span>데이터 폴더</span>
         </button>
       </div>
     </footer>

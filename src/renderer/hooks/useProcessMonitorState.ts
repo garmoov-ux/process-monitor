@@ -77,7 +77,7 @@ export function useProcessMonitorState() {
     async (targetId: string, command: 'START' | 'STOP' | 'RESTART') => {
       const next = await window.processMonitorApi.controlTarget(targetId, command)
       setSnapshot(next)
-      const label = command === 'START' ? '실행' : command === 'STOP' ? '종료' : '재시작'
+      const label = command === 'START' ? '시작' : command === 'STOP' ? '종료' : '재시작'
       showToast(`프로세스 ${label} 명령을 전송했습니다.`)
     },
     [showToast]
@@ -98,7 +98,7 @@ export function useProcessMonitorState() {
       setSnapshot(next)
       showToast(
         maintenanceMode
-          ? '전체 점검 모드가 켜졌습니다. 모든 자동 재실행이 일시 보류됩니다.'
+          ? '전체 점검 모드가 켜졌습니다. 모든 자동 복구가 일시 보류됩니다.'
           : '전체 점검 모드가 해제되어 실시간 감시를 재개합니다.'
       )
     },
@@ -109,7 +109,7 @@ export function useProcessMonitorState() {
     async (nextConfig: AppConfig) => {
       const next = await window.processMonitorApi.updateConfig(nextConfig)
       setSnapshot(next)
-      showToast('시스템 및 시간 동기화 설정이 저장되었습니다.')
+      showToast('환경 설정이 원자적으로 저장 및 반영되었습니다.')
     },
     [showToast]
   )
@@ -119,6 +119,12 @@ export function useProcessMonitorState() {
     setSnapshot(res.snapshot)
     showToast(res.record.message)
     return res.record
+  }, [showToast])
+
+  const runCleanupNow = useCallback(async () => {
+    const next = await window.processMonitorApi.runCleanupNow()
+    setSnapshot(next)
+    showToast('보관 기간이 경과된 오래된 로그 및 이력을 정리했습니다.')
   }, [showToast])
 
   const scanRunning = useCallback(async (): Promise<RunningProcessSnapshot[]> => {
@@ -142,6 +148,7 @@ export function useProcessMonitorState() {
     toggleMaintenanceMode,
     updateConfig,
     syncNtpNow,
+    runCleanupNow,
     scanRunning,
     queryEvents
   }

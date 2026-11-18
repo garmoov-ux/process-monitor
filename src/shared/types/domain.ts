@@ -45,6 +45,7 @@ export interface NtpConfig {
   timeoutMs: number
   maxOffsetLimitSec: number
   servers: [string, string, string]
+  ports: [number, number, number]
 }
 
 export interface AppConfig {
@@ -141,6 +142,15 @@ export interface DashboardSummary {
   ntpFailCount: number
 }
 
+export interface StorageFolderItem {
+  key: 'CONFIG' | 'DATA' | 'LOGS'
+  label: string
+  description: string
+  resolvedPath: string
+  fileCount: number
+  totalBytes: number
+}
+
 export interface MonitorStateSnapshot {
   config: AppConfig
   summary: DashboardSummary
@@ -148,6 +158,7 @@ export interface MonitorStateSnapshot {
   recentEvents: ProcessEventRecord[]
   recentNtpHistory: NtpSyncRecord[]
   dailyStats: DailyProcessStat[]
+  storageInfo: StorageFolderItem[]
 }
 
 export interface HistoryQueryFilter {

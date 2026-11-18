@@ -83,9 +83,9 @@ export const DashboardHeroTile: React.FC<DashboardHeroTileProps> = ({ summary })
             {lastNtp ? lastNtp.serverUsed : `성공 ${summary.ntpSuccessCount}건`}
           </span>
         </div>
-        <span className="text-[15px] font-bold tracking-[-0.02em] text-[#38bdf8] whitespace-nowrap ml-1">
+        <span className="text-[14px] font-bold tracking-[-0.02em] text-[#38bdf8] whitespace-nowrap ml-1">
           {lastNtp
-            ? `${lastNtp.offsetMs >= 0 ? '+' : ''}${lastNtp.offsetMs}ms`
+            ? `${lastNtp.offsetMs >= 0 ? '+' : ''}${lastNtp.offsetMs}밀리초`
             : '대기'}
         </span>
       </div>

@@ -32,6 +32,18 @@ export async function applyWindowsSystemTime(
   })
 }
 
+function buildEndpointsWithPorts(config: NtpConfig): string[] {
+  const ports = Array.isArray(config.ports) ? config.ports : [123, 123, 123]
+  return config.servers.map((srv, idx) => {
+    const trimmed = (srv || '').trim()
+    if (!trimmed) return ''
+    if (trimmed.includes(':')) return trimmed
+    const port = Number(ports[idx] ?? 123)
+    const validPort = Number.isInteger(port) && port >= 1 && port <= 65535 ? port : 123
+    return validPort === 123 ? trimmed : `${trimmed}:${validPort}`
+  })
+}
+
 export class NtpScheduler {
   private timer: NodeJS.Timeout | null = null
   private syncing = false
@@ -73,7 +85,8 @@ export class NtpScheduler {
 
     this.syncing = true
     try {
-      const queryRes = await queryMultiNtpWithFailover(this.config.servers, this.config.timeoutMs)
+      const endpoints = buildEndpointsWithPorts(this.config)
+      const queryRes = await queryMultiNtpWithFailover(endpoints, this.config.timeoutMs)
 
       if (!queryRes.ok) {
         const record = this.ntpRepo.insertSyncRecord({
@@ -82,7 +95,7 @@ export class NtpScheduler {
           rttMs: queryRes.rttMs,
           applied: false,
           status: 'FAILED',
-          message: queryRes.error || 'NTP 서버 통신 실패'
+          message: queryRes.error || '시간 서버 통신 실패'
         })
         writeSystemLog('WARN', `시간 동기화 실패: ${record.message}`)
         this.onUpdated?.()
@@ -112,8 +125,8 @@ export class NtpScheduler {
         const applyRes = await this.clockApplier(targetMs)
         applied = applyRes.ok
         applyNote = applyRes.ok
-          ? `시스템 시각 동기화 완료 (보정 오차 ${queryRes.offsetMs >= 0 ? '+' : ''}${queryRes.offsetMs}ms)`
-          : `오차 측정 성공(${queryRes.offsetMs}ms), 시스템 시계 반영 실패(관리자 권한 필요)`
+          ? `시스템 시각 동기화 완료 (보정 오차 ${queryRes.offsetMs >= 0 ? '+' : ''}${queryRes.offsetMs}밀리초)`
+          : `오차 측정 성공(${queryRes.offsetMs}밀리초), 시스템 시계 반영 실패(관리자 권한 필요)`
       }
 
       const record = this.ntpRepo.insertSyncRecord({
@@ -124,7 +137,7 @@ export class NtpScheduler {
         status: 'SUCCESS',
         message: applyNote
       })
-      writeSystemLog('INFO', `[${queryRes.serverUsed}] ${applyNote} (왕복 지연 ${queryRes.rttMs}ms)`)
+      writeSystemLog('INFO', `[${queryRes.serverUsed}] ${applyNote} (왕복 지연 ${queryRes.rttMs}밀리초)`)
       this.onUpdated?.()
       return record
     } finally {
