@@ -146,6 +146,10 @@ describe('ProcessStateMachine (단조 증가 시간 기반 상태 전이 검증)
     expect(stopAct.pid).toBe(7777)
     expect(sm.getRuntimeStatus().state).toBe('STOPPING')
 
+    // 수동 종료 시 자동 감시가 꺼져도(enabled=false) STOPPING 단계별 강제 종료가 끝까지 수행되어야 함
+    sm.updateConfig({ ...target, enabled: false })
+    expect(sm.getRuntimeStatus().state).toBe('STOPPING')
+
     // 2초 경과: 아직 프로세스가 살아있으면 대기 유지
     nowSec = 502n
     expect(sm.evaluateTick(createSnapshot(true, 7777), false, true).type).toBe('NONE')

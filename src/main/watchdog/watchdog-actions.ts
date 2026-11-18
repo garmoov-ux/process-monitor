@@ -113,11 +113,14 @@ export async function executeManualTargetControl(params: {
   machine: ProcessStateMachine
   command: 'START' | 'STOP' | 'RESTART'
   processRepo: ProcessRepository
-  onDisableTarget: () => Promise<void>
+  onSetTargetEnabled: (enabled: boolean) => Promise<void>
 }): Promise<void> {
-  const { target, machine, command, processRepo, onDisableTarget } = params
+  const { target, machine, command, processRepo, onSetTargetEnabled } = params
 
   if (command === 'START') {
+    if (!target.enabled) {
+      await onSetTargetEnabled(true)
+    }
     const spawnRes = await spawnTargetProcess(target)
     if (spawnRes.ok) {
       const nowIso = new Date().toISOString()
@@ -129,17 +132,17 @@ export async function executeManualTargetControl(params: {
         'START',
         'INFO',
         spawnRes.pid,
-        `수동 실행 완료 (프로세스 번호: ${spawnRes.pid ?? '-'})`
+        `수동 시작 완료 (프로세스 번호: ${spawnRes.pid ?? '-'})`
       )
     } else {
       machine.markPathInvalid(spawnRes.error || '실행 실패')
       recordTargetEvent(processRepo, target, 'PATH_ERROR', 'ERROR', null, `수동 실행 실패: ${spawnRes.error}`)
     }
   } else if (command === 'STOP') {
-    if (target.enabled) {
-      await onDisableTarget()
-    }
     const action = machine.requestManualStop(false)
+    if (target.enabled) {
+      await onSetTargetEnabled(false)
+    }
     if (action.type === 'GRACEFUL_STOP' && action.pid) {
       await requestGracefulStop(action.pid)
       recordTargetEvent(
@@ -152,6 +155,9 @@ export async function executeManualTargetControl(params: {
       )
     }
   } else if (command === 'RESTART') {
+    if (!target.enabled) {
+      await onSetTargetEnabled(true)
+    }
     const action = machine.requestManualStop(true)
     if (action.type === 'GRACEFUL_STOP' && action.pid) {
       await requestGracefulStop(action.pid)

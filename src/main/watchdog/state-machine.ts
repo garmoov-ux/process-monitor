@@ -46,7 +46,7 @@ export class ProcessStateMachine {
   updateConfig(nextTarget: ProcessTargetConfig): void {
     const wasEnabled = this.target.enabled
     this.target = nextTarget
-    if (!nextTarget.enabled) {
+    if (!nextTarget.enabled && this.state !== 'STOPPING') {
       this.transitionTo('PAUSED', '개별 감시 일시정지됨')
     } else if (!wasEnabled && nextTarget.enabled && this.state === 'PAUSED') {
       this.transitionTo('RESTART_PENDING', '감시 활성화됨')
@@ -131,6 +131,35 @@ export class ProcessStateMachine {
     const nowNs = this.clockNs()
     this.pruneRetryWindow(nowNs)
 
+    // 종료 처리 중(STOPPING)인 경우 개별 감시 비활성화 여부와 무관하게 정상 종료 대기 -> 강제 종료까지 완수
+    if (this.state === 'STOPPING') {
+      if (!snapshot) {
+        this.pid = null
+        this.runningSinceNs = null
+        if (this.stopThenRestart) {
+          this.stopThenRestart = false
+          return { type: 'SPAWN', reason: '정상 종료 완료 후 재기동' }
+        }
+        this.transitionTo('PAUSED', '정상 종료 완료', nowNs)
+        return { type: 'NONE' }
+      }
+
+      const elapsed = this.elapsedSecSince(this.stateEnteredAtNs, nowNs)
+      if (elapsed >= this.target.gracefulTimeoutSec) {
+        const killPid = snapshot.pid
+        const shouldRestart = this.stopThenRestart
+        this.stopThenRestart = false
+        this.pid = null
+        this.runningSinceNs = null
+        if (shouldRestart) {
+          return { type: 'FORCE_KILL_AND_RESTART', pid: killPid, reason: '정상 종료 유예 초과로 강제 재시작' }
+        }
+        this.transitionTo('PAUSED', '유예 시간 초과로 강제 종료 완료', nowNs)
+        return { type: 'FORCE_KILL_ONLY', pid: killPid, reason: '정상 종료 유예 초과 강제 종료' }
+      }
+      return { type: 'NONE' }
+    }
+
     if (maintenanceMode || !this.target.enabled) {
       if (snapshot) {
         this.pid = snapshot.pid
@@ -159,34 +188,6 @@ export class ProcessStateMachine {
         this.pid = snapshot.pid
         this.runningSinceNs = this.runningSinceNs ?? nowNs
         this.transitionTo('RUNNING', '수동 기동 감지되어 정상 복귀', nowNs)
-      }
-      return { type: 'NONE' }
-    }
-
-    if (this.state === 'STOPPING') {
-      if (!snapshot) {
-        this.pid = null
-        this.runningSinceNs = null
-        if (this.stopThenRestart) {
-          this.stopThenRestart = false
-          return { type: 'SPAWN', reason: '정상 종료 완료 후 재기동' }
-        }
-        this.transitionTo('PAUSED', '정상 종료 완료', nowNs)
-        return { type: 'NONE' }
-      }
-
-      const elapsed = this.elapsedSecSince(this.stateEnteredAtNs, nowNs)
-      if (elapsed >= this.target.gracefulTimeoutSec) {
-        const killPid = snapshot.pid
-        const shouldRestart = this.stopThenRestart
-        this.stopThenRestart = false
-        this.pid = null
-        this.runningSinceNs = null
-        if (shouldRestart) {
-          return { type: 'FORCE_KILL_AND_RESTART', pid: killPid, reason: '정상 종료 유예 초과로 강제 재시작' }
-        }
-        this.transitionTo('PAUSED', '유예 시간 초과로 강제 종료 완료', nowNs)
-        return { type: 'FORCE_KILL_ONLY', pid: killPid, reason: '정상 종료 유예 초과 강제 종료' }
       }
       return { type: 'NONE' }
     }
@@ -254,7 +255,6 @@ export class ProcessStateMachine {
       return { type: 'NONE' }
     }
 
-    // 프로세스가 스냅샷에 존재하지 않는 경우
     this.pid = null
     this.memoryKb = 0
     this.runningSinceNs = null

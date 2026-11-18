@@ -254,8 +254,8 @@ export class WatchdogScheduler {
       machine,
       command,
       processRepo: this.processRepo,
-      onDisableTarget: async () => {
-        await this.toggleTargetEnabled(targetId, false)
+      onSetTargetEnabled: async (enabled: boolean) => {
+        await this.toggleTargetEnabled(targetId, enabled)
       }
     })
 

@@ -9,8 +9,8 @@
   },
   "ntp": {
     "enabled": true,
-    "syncIntervalMin": 60,
-    "syncIntervalSec": 3600,
+    "syncIntervalMin": 1,
+    "syncIntervalSec": 60,
     "timeoutMs": 2000,
     "maxOffsetLimitSec": 3600,
     "servers": [

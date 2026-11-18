@@ -19,13 +19,21 @@ function getTimeStamp(date = new Date()): string {
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`
 }
 
+function appendUtf8WithBom(filePath: string, line: string): void {
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, '\uFEFF' + line, 'utf-8')
+  } else {
+    fs.appendFileSync(filePath, line, 'utf-8')
+  }
+}
+
 export function writeSystemLog(level: 'INFO' | 'WARN' | 'ERROR', message: string): void {
   try {
     const { logDir } = resolveAppPaths()
     const now = new Date()
     const filePath = path.join(logDir, `${getDateStamp(now)}_system.log`)
     const line = `[${getTimeStamp(now)}] [${level}] ${message}\n`
-    fs.appendFileSync(filePath, line, 'utf-8')
+    appendUtf8WithBom(filePath, line)
   } catch {
     // 파일 로깅 실패 시 메인 루프 중단 방지
   }
@@ -42,7 +50,7 @@ export function writeProcessLog(
     const now = new Date()
     const filePath = path.join(logDir, `${getDateStamp(now)}_process.log`)
     const line = `[${getTimeStamp(now)}] [${level}] [${targetName}] [${eventType}] ${message}\n`
-    fs.appendFileSync(filePath, line, 'utf-8')
+    appendUtf8WithBom(filePath, line)
   } catch {
     // 파일 로깅 실패 시 메인 루프 중단 방지
   }
